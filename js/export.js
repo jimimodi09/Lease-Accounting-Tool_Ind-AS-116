@@ -219,7 +219,7 @@ const Export = (() => {
     amParamRow.getCell(2).numFmt = '0.00%';
     amParamRow.height = 18;
 
-    const amHdr = ws3.addRow(['#', 'Date', 'FY', 'Days', 'Rate', 'Opening Balance (₹)', 'Interest (₹)', 'Payment (₹)', 'Closing Balance (₹)']);
+    const amHdr = ws3.addRow(['#', 'Date', 'FY', 'Months', 'Rate', 'Opening Balance (₹)', 'Interest (₹)', 'Payment (₹)', 'Closing Balance (₹)']);
     styleHeader(amHdr);
     const AM_DATA_START = 5;
     ws3.views = [{ state: 'frozen', ySplit: 4 }];
@@ -230,19 +230,23 @@ const Export = (() => {
         ? r.openBal                          // first row: hardcoded initial PV
         : f(`=I${rn - 1}`);                  // subsequent: previous closing balance (I is col 9)
 
-      // Interest formula: OpenBal(F) * Rate(E) * (Days(D)/365)
-      const intFormula = f(`=ROUND(F${rn}*E${rn}*(D${rn}/365), 2)`);
+      // Interest formula: OpenBal(F) * Rate(E) * (Months(D)/12)
+      // IF beginning: (Open(F) - Pmt(H)) * Rate(E) * (Months(D)/12)
+      const isBeg = inputs.paymentTiming === 'beginning';
+      const intFormula = isBeg
+        ? f(`=ROUND(MAX(0,F${rn}-H${rn})*E${rn}*(D${rn}/12), 2)`)
+        : f(`=ROUND(F${rn}*E${rn}*(D${rn}/12), 2)`);
 
       // Closing balance: max(0, Open(F) + Int(G) - Pmt(H))
       const isLast = idx === amortRows.length - 1;
       const closeFormula = isLast ? 0 : f(`=MAX(0,F${rn}+G${rn}-H${rn})`);
 
       const row = ws3.addRow([
-        r.index, Utils.fmtDate(r.date), r.fy, 
-        r.days, r.ratePct / 100, // E col is rate
+        r.index, Utils.fmtDate(r.date), r.fy,
+        r.months, r.ratePct / 100, // E col is rate
         openBalCell, intFormula, r.payment, closeFormula
       ]);
-      
+
       styleData(row, idx);
       row.getCell(5).numFmt = '0.00%'; // Rate
       [6, 7, 8, 9].forEach(c => { row.getCell(c).numFmt = NUM_INR; });
@@ -446,7 +450,18 @@ const Export = (() => {
     let y = addPage('Present Value Calculation');
     doc.autoTable({ startY: y, theme: 'grid', head: [['#', 'Date', 'Period', 'Payment (₹)', 'Discount Factor', 'PV (₹)']], body: pvResult.schedule.map(r => [r.index, Utils.fmtDate(r.date), r.period, Utils.fmtNum(r.payment), r.discountFactor.toFixed(6), Utils.fmtNum(r.pv)]), foot: [['', '', 'Total', Utils.fmtNum(pvResult.schedule.reduce((s, r) => s + r.payment, 0)), '', Utils.fmtNum(pvResult.totalPV)]], ..._pdfTableStyle(DARK, ACCENT) });
     y = addPage('Lease Liability Amortisation');
-    doc.autoTable({ startY: y, theme: 'grid', head: [['#', 'Date', 'FY', 'Days', 'Rate', 'Opening (₹)', 'Interest (₹)', 'Payment (₹)', 'Closing (₹)']], body: amortRows.map(r => [r.index, Utils.fmtDate(r.date), r.fy, r.days, r.ratePct + '%', Utils.fmtNum(r.openBal), Utils.fmtNum(r.interest), Utils.fmtNum(r.payment), Utils.fmtNum(r.closeBal)]), ..._pdfTableStyle(DARK, ACCENT) });
+    doc.autoTable({
+      startY: y,
+      theme: 'grid',
+      head: [
+        ['#', 'Date', 'FY', 'Months', 'Rate', 'Opening (₹)', 'Interest (₹)', 'Payment (₹)', 'Closing (₹)']
+      ],
+      body: amortRows.map(r => [
+        r.index,
+        Utils.fmtDate(r.date),
+        r.fy,
+        r.months,
+        r.ratePct + '%', Utils.fmtNum(r.openBal), Utils.fmtNum(r.interest), Utils.fmtNum(r.payment), Utils.fmtNum(r.closeBal)]), ..._pdfTableStyle(DARK, ACCENT) });
     y = addPage('ROU Asset – Depreciation');
     doc.autoTable({ startY: y, theme: 'grid', head: [['FY', 'Opening BV (₹)', 'Depreciation (₹)', 'Closing BV (₹)']], body: rouRows.map(r => [r.fy, Utils.fmtNum(r.openBV), Utils.fmtNum(r.dep), Utils.fmtNum(r.closeBV)]), ..._pdfTableStyle(DARK, ACCENT) });
     y = addPage('Financial Year Summary');

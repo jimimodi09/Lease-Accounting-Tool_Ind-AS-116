@@ -46,7 +46,7 @@ const Schedules = (() => {
           <td>${row.index}</td>
           <td>${Utils.fmtDate(row.date)}</td>
           <td>${row.fy}</td>
-          <td>${row.days}</td>
+          <td>${row.months}</td>
           <td>${row.ratePct}%</td>
           <td>${Utils.fmtNum(row.openBal)}</td>
           <td>${Utils.fmtNum(row.interest)}</td>

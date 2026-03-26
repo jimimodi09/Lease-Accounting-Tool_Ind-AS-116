@@ -339,12 +339,15 @@
       paymentDates, paymentAmount, roi, frequency, fyStartMonth,
       openingLiability, startDate, varPayments, paymentTiming, endDate
     });
-
     const rouInitial = Utils.round2(pvResult.totalPV + initialDirectCosts - leaseIncentives + restorationCosts);
     const endDateForROU = overrides.termMonths ? Utils.addMonths(startDate, termMonths) : endDate;
 
     const rouRows   = Calculator.buildROUSchedule({ rouAssetInitial: rouInitial, startDate, endDate: endDateForROU, fyStartMonth });
-    const fySummary = Calculator.buildFYSummary({ amortRows, rouRows, fyStartMonth });
+    const fySummary = Calculator.buildFYSummary({
+      amortRows,
+      rouRows, 
+      fyStartMonth: inputs.fyStartMonth
+    });
 
     return {
       pvResult, amortRows, rouRows, fySummary, rouInitial,
