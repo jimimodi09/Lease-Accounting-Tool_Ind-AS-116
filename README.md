@@ -1,0 +1,1 @@
+# Lease-Accounting-Tool_Ind-AS-116
