@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ind AS 116 – Lease Accounting Tool</title>
+  <meta name="description" content="Professional Ind AS 116 Lease Accounting Tool for accountants, auditors and finance teams. Generates audit-ready schedules, journal entries and disclosures."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <!-- Flatpickr date picker -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <!-- SheetJS + FileSaver.js (local, for reliable Excel download) -->
+  <script src="libs/xlsx.full.min.js"></script>
+  <script src="libs/FileSaver.min.js"></script>
+  <!-- ExcelJS for styled Excel export -->
+  <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+  <!-- jsPDF for PDF export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.7.0/jspdf.plugin.autotable.min.js"></script>
+  <link rel="stylesheet" href="index.css"/>
+</head>
+<body>
+  <!-- ── TOP NAV ── -->
+  <header class="navbar">
+    <div class="nav-brand">
+      <span class="nav-icon">📋</span>
+      <div>
+        <div class="nav-title">Ind AS 116</div>
+        <div class="nav-sub">Lease Accounting Tool</div>
+      </div>
+    </div>
+    <nav class="nav-tabs" id="navTabs">
+      <button class="nav-tab active" data-tab="inputs">Inputs</button>
+      <button class="nav-tab" data-tab="summary">Dashboard</button>
+      <button class="nav-tab" data-tab="schedules">Schedules</button>
+      <button class="nav-tab" data-tab="journals">Journal Entries</button>
+      <button class="nav-tab" data-tab="financials">Financials</button>
+      <button class="nav-tab" data-tab="disclosure">Disclosure</button>
+      <button class="nav-tab" data-tab="compliance">Compliance</button>
+      <button class="nav-tab" data-tab="portfolio">Portfolio</button>
+    </nav>
+    <div class="nav-actions">
+      <button class="btn-icon" id="exportExcelBtn" title="Export to Excel">📊 Excel</button>
+      <button class="btn-icon" id="exportPdfBtn" title="Export to PDF">📄 PDF</button>
+    </div>
+  </header>
+
+  <main class="app-main">
+
+    <!-- ══════════════════════════════════════ -->
+    <!-- TAB 1: INPUTS                          -->
+    <!-- ══════════════════════════════════════ -->
+    <section class="tab-panel active" id="tab-inputs">
+      <div class="panel-header">
+        <h1>Lease Inputs</h1>
+        <p>Enter lease parameters or upload a prefilled template to compute Ind AS 116 schedules.</p>
+      </div>
+
+      <div class="input-grid">
+        <!-- Lease Identity -->
+        <div class="card">
+          <div class="card-title">📌 Lease Details</div>
+          <div class="field-group">
+            <label for="leaseName">Lease / Asset Description
+              <span class="tooltip" data-tip="A short description of the leased asset, e.g. Office Premises – Mumbai">ⓘ</span>
+            </label>
+            <input type="text" id="leaseName" placeholder="e.g. Office Premises – Mumbai"/>
+          </div>
+          <div class="field-row">
+            <div class="field-group">
+              <label for="leaseStart">Lease Start Date</label>
+              <input type="text" id="leaseStart" class="date-picker" placeholder="DD-MM-YYYY" autocomplete="off" readonly/>
+            </div>
+            <div class="field-group">
+              <label for="leaseEnd">Lease End Date</label>
+              <input type="text" id="leaseEnd" class="date-picker" placeholder="DD-MM-YYYY" autocomplete="off" readonly/>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field-group">
+              <label for="leaseTerm">Lease Term (months)
+                <span class="tooltip" data-tip="Auto-calculated from dates. You may override manually.">ⓘ</span>
+              </label>
+              <input type="number" id="leaseTerm" min="1" placeholder="Auto"/>
+            </div>
+            <div class="field-group">
+              <label for="leaseTermYears">Lease Term (years)
+                <span class="tooltip" data-tip="Auto-calculated from lease term in months (months ÷ 12).">ⓘ</span>
+              </label>
+              <input type="text" id="leaseTermYears" placeholder="Auto" readonly style="background:var(--bg-muted,#f0f4ff);cursor:default;"/>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field-group" style="grid-column:1/-1;">
+              <label for="fyStart">Financial Year Start (Month)
+                <span class="tooltip" data-tip="Typically April (4) for Indian companies.">ⓘ</span>
+              </label>
+              <select id="fyStart" style="max-width:260px;">
+                <option value="4" selected>April (Indian FY)</option>
+                <option value="1">January (Calendar)</option>
+                <option value="7">July</option>
+                <option value="10">October</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Payment Parameters -->
+        <div class="card">
+          <div class="card-title">💰 Payment Parameters</div>
+          <div class="field-group">
+            <label for="paymentAmount">Lease Payment Amount (₹)
+              <span class="tooltip" data-tip="The periodic lease payment per the lease agreement.">ⓘ</span>
+            </label>
+            <input type="number" id="paymentAmount" placeholder="e.g. 100000" min="1"/>
+          </div>
+          <div class="field-row">
+            <div class="field-group">
+              <label for="frequency">Payment Frequency</label>
+              <select id="frequency">
+                <option value="monthly">Monthly</option>
+                <option value="quarterly">Quarterly</option>
+                <option value="halfyearly">Half-Yearly</option>
+                <option value="yearly">Yearly</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label for="paymentTiming">Payment Timing
+                <span class="tooltip" data-tip="Beginning = payment on first day of period (annuity due). End = payment on last day (ordinary annuity).">ⓘ</span>
+              </label>
+              <select id="paymentTiming">
+                <option value="end">End of Period</option>
+                <option value="beginning">Beginning of Period</option>
+              </select>
+            </div>
+          </div>
+          <div class="field-group">
+            <label for="roi">Incremental Borrowing Rate / ROI (% p.a.)
+              <span class="tooltip" data-tip="The rate at which the lessee could borrow funds to buy a similar asset. Used to discount lease payments.">ⓘ</span>
+            </label>
+            <input type="number" id="roi" placeholder="e.g. 10.5" step="0.01" min="0"/>
+          </div>
+          <div class="field-row">
+            <div class="field-group">
+              <label for="initialDirectCosts">Initial Direct Costs (₹)
+                <span class="tooltip" data-tip="Incremental costs of obtaining the lease (e.g. legal fees). Added to ROU asset.">ⓘ</span>
+              </label>
+              <input type="number" id="initialDirectCosts" placeholder="0" min="0" value="0"/>
+            </div>
+            <div class="field-group">
+              <label for="leaseIncentives">Lease Incentives Received (₹)
+                <span class="tooltip" data-tip="Any incentives received from lessor. Deducted from ROU asset.">ⓘ</span>
+              </label>
+              <input type="number" id="leaseIncentives" placeholder="0" min="0" value="0"/>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field-group">
+              <label for="restorationCosts">Restoration / Dismantling Costs (₹)
+                <span class="tooltip" data-tip="Estimated cost to restore the asset at end of lease. Added to ROU asset. (Ind AS 116 Para 24(d))">ⓘ</span>
+              </label>
+              <input type="number" id="restorationCosts" placeholder="0" min="0" value="0"/>
+            </div>
+            <div class="field-group">
+              <label for="residualValue">Residual Value Guarantee (₹)
+                <span class="tooltip" data-tip="Amount guaranteed by lessee related to residual value. Included in lease payments for PV calculation.">ⓘ</span>
+              </label>
+              <input type="number" id="residualValue" placeholder="0" min="0" value="0"/>
+            </div>
+          </div>
+
+          <!-- Escalation Clause -->
+          <div class="escalation-divider">📈 Escalation Clause <span class="escalation-optional">(Optional)</span></div>
+          <div class="field-row">
+            <div class="field-group">
+              <label for="escalationRate">Escalation Rate
+                <span class="tooltip" data-tip="Percentage or fixed amount by which lease payment increases at each escalation point.">ⓘ</span>
+              </label>
+              <input type="number" id="escalationRate" placeholder="e.g. 5 for 5%" step="0.01" min="0"/>
+            </div>
+            <div class="field-group">
+              <label for="escalationType">Escalation Type</label>
+              <select id="escalationType">
+                <option value="percent">% Increase (e.g. 5% p.a.)</option>
+                <option value="fixed">Fixed Amount Increase (₹)</option>
+              </select>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field-group">
+              <label for="escalationFreq">Escalate Every
+                <span class="tooltip" data-tip="How many payment periods between each escalation step.">ⓘ</span>
+              </label>
+              <select id="escalationFreq">
+                <option value="12">Every 12 Months (Annual)</option>
+                <option value="24">Every 24 Months (Bi-annual)</option>
+                <option value="36">Every 36 Months (Tri-annual)</option>
+                <option value="6">Every 6 Months</option>
+                <option value="custom">Custom (enter months below)</option>
+              </select>
+            </div>
+            <div class="field-group" id="escalationCustomGroup" style="display:none;">
+              <label for="escalationCustomMonths">Custom Interval (months)</label>
+              <input type="number" id="escalationCustomMonths" placeholder="e.g. 18" min="1"/>
+            </div>
+          </div>
+          <!-- Manual escalation table (editable) -->
+          <div id="escalationTableWrap" style="display:none;margin-top:10px;">
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">Auto-generated payment schedule — edit amounts directly:</div>
+            <div class="table-wrapper" style="max-height:220px;overflow-y:auto;">
+              <table class="data-table" id="escalationTable">
+                <thead><tr><th>Step</th><th>From Period</th><th style="text-align:left;">Payment Date</th><th>Payment Amount (₹)</th></tr></thead>
+                <tbody id="escalationBody"></tbody>
+              </table>
+            </div>
+            <div class="btn-row" style="margin-top:8px;">
+              <button class="btn-outline" id="applyEscalationBtn" style="font-size:12px;">✔ Apply Schedule to Computation</button>
+              <button class="btn-outline" id="clearEscalationBtn" style="font-size:12px;color:var(--danger);border-color:var(--danger);">✕ Clear Escalation</button>
+            </div>
+          </div>
+          <div class="btn-row" style="margin-top:8px;">
+            <button class="btn-outline" id="previewEscalationBtn" style="font-size:12px;">👁 Preview Escalation Schedule</button>
+          </div>
+        </div>
+
+        <!-- Template Upload -->
+        <div class="card">
+          <div class="card-title">📂 Template Upload / Download</div>
+          <p class="card-desc">Download the blank template, fill lease details offline, then upload.</p>
+          <div class="upload-area" id="uploadArea">
+            <input type="file" id="fileInput" accept=".csv,.xlsx" style="display:none"/>
+            <div class="upload-icon">☁️</div>
+            <div>Drag & drop CSV/Excel template here</div>
+            <div class="upload-sub">or</div>
+            <button class="btn-outline" onclick="document.getElementById('fileInput').click()">Browse File</button>
+          </div>
+          <div class="upload-status" id="uploadStatus"></div>
+          <div class="btn-row">
+            <button class="btn-outline" id="downloadTemplateBtn">⬇ Download Blank Template</button>
+          </div>
+        </div>
+
+        <!-- Opening Liability -->
+        <div class="card" style="padding:18px 20px;">
+          <div class="card-title">📋 Prior Period / Opening Balance</div>
+          <div class="field-group">
+            <label for="openingLiability">Opening Lease Liability (₹)
+              <span class="tooltip" data-tip="For mid-year adoption or Ind AS 116 transition: enter the lease liability balance at the start of computation. Leave blank for fresh computation.">ⓘ</span>
+            </label>
+            <input type="number" id="openingLiability" placeholder="Leave blank for fresh computation" min="0"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error banner -->
+      <div class="error-banner" id="errorBanner" style="display:none"></div>
+
+      <!-- Compute Button -->
+      <div class="compute-row">
+        <button class="btn-primary" id="computeBtn">⚡ Compute Lease Schedules</button>
+        <button class="btn-secondary" id="resetBtn">↺ Reset</button>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════ -->
+    <!-- TAB 2: SUMMARY DASHBOARD               -->
+    <!-- ══════════════════════════════════════ -->
+    <section class="tab-panel" id="tab-summary">
+      <div class="panel-header">
+        <h2>Summary Dashboard</h2>
+        <p id="summarySubtitle">Compute a lease to see results.</p>
+        <p style="font-size: 12px; color: var(--text-muted); margin-top: 6px;">Author: <strong>CA JIMI R MODI</strong></p>
+      </div>
+      <div class="kpi-grid" id="kpiGrid">
+        <div class="kpi-card">
+          <div class="kpi-label">Initial Lease Liability (PV)</div>
+          <div class="kpi-value" id="kpiPV">—</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">ROU Asset (Initial)</div>
+          <div class="kpi-value" id="kpiROU">—</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Total Lease Payments</div>
+          <div class="kpi-value" id="kpiTotalPmt">—</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Total Interest Expense</div>
+          <div class="kpi-value" id="kpiTotalInt">—</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Total Depreciation</div>
+          <div class="kpi-value" id="kpiTotalDep">—</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Lease Term</div>
+          <div class="kpi-value" id="kpiTerm">—</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">IBR / ROI</div>
+          <div class="kpi-value" id="kpiROI">—</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Payment Frequency</div>
+          <div class="kpi-value" id="kpiFreq">—</div>
+        </div>
+      </div>
+
+      <!-- FY Summary -->
+      <div class="section-title">Financial Year-wise Summary</div>
+      <div class="table-wrapper" id="fySummaryWrapper">
+        <table class="data-table" id="fySummaryTable">
+          <thead>
+            <tr>
+              <th>Financial Year</th>
+              <th>Opening Liability</th>
+              <th>Interest Accrued</th>
+              <th>Payments</th>
+              <th>Closing Liability</th>
+              <th>Current Portion</th>
+              <th>Non-Current Portion</th>
+              <th>Depreciation</th>
+              <th>ROU Book Value</th>
+            </tr>
+          </thead>
+          <tbody id="fySummaryBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════ -->
+    <!-- TAB 3: SCHEDULES                       -->
+    <!-- ══════════════════════════════════════ -->
+    <section class="tab-panel" id="tab-schedules">
+      <div class="panel-header">
+        <h2>Detailed Schedules</h2>
+      </div>
+      <div class="schedule-tabs">
+        <button class="sch-tab active" data-sch="pvSchedule">PV Calculation</button>
+        <button class="sch-tab" data-sch="amortSchedule">Liability Amortisation</button>
+        <button class="sch-tab" data-sch="rouSchedule">ROU Depreciation</button>
+      </div>
+
+      <!-- PV Schedule -->
+      <div class="sch-panel active" id="pvSchedule">
+        <div class="section-title">Present Value Calculation Table</div>
+        <div class="table-wrapper">
+          <table class="data-table" id="pvTable">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Payment Date</th>
+                <th>Period (months)</th>
+                <th>Lease Payment (₹)</th>
+                <th>Discount Factor</th>
+                <th>Present Value (₹)</th>
+              </tr>
+            </thead>
+            <tbody id="pvBody"></tbody>
+            <tfoot id="pvFoot"></tfoot>
+          </table>
+        </div>
+      </div>
+
+      <!-- Amortisation Schedule -->
+      <div class="sch-panel" id="amortSchedule">
+        <div class="section-title">Lease Liability Amortisation Schedule</div>
+        <div class="table-wrapper">
+          <table class="data-table" id="amortTable">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Date</th>
+                <th>FY</th>
+                <th>Months</th>
+                <th>Rate</th>
+                <th>Opening Balance (₹)</th>
+                <th>Interest @ IBR (₹)</th>
+                <th>Payment (₹)</th>
+                <th>Closing Balance (₹)</th>
+              </tr>
+            </thead>
+            <tbody id="amortBody"></tbody>
+            <tfoot id="amortFoot"></tfoot>
+          </table>
+        </div>
+      </div>
+
+      <!-- ROU Schedule -->
+      <div class="sch-panel" id="rouSchedule">
+        <div class="section-title">Right-of-Use Asset – Depreciation Schedule</div>
+        <div class="table-wrapper">
+          <table class="data-table" id="rouTable">
+            <thead>
+              <tr>
+                <th>Financial Year</th>
+                <th>Opening Book Value (₹)</th>
+                <th>Depreciation (₹)</th>
+                <th>Closing Book Value (₹)</th>
+              </tr>
+            </thead>
+            <tbody id="rouBody"></tbody>
+            <tfoot id="rouFoot"></tfoot>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════ -->
+    <!-- TAB 4: JOURNAL ENTRIES                 -->
+    <!-- ══════════════════════════════════════ -->
+    <section class="tab-panel" id="tab-journals">
+      <div class="panel-header">
+        <h2>Auto-Generated Journal Entries</h2>
+        <p>All journal entries per Ind AS 116 for each accounting year.</p>
+      </div>
+      <div id="journalsContainer"></div>
+    </section>
+
+    <!-- ══════════════════════════════════════ -->
+    <!-- TAB 5: FINANCIAL STATEMENTS            -->
+    <!-- ══════════════════════════════════════ -->
+    <section class="tab-panel" id="tab-financials">
+      <div class="panel-header">
+        <h2>Financial Statement Presentation</h2>
+      </div>
+      <div class="fs-grid">
+        <div class="card">
+          <div class="card-title">Balance Sheet Extracts</div>
+          <div id="bsView"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">P&L Extracts</div>
+          <div id="plView"></div>
+        </div>
+        <div class="card full-width">
+          <div class="card-title">Cash Flow Classification</div>
+          <div id="cfView"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════ -->
+    <!-- TAB 6: DISCLOSURE                      -->
+    <!-- ══════════════════════════════════════ -->
+    <section class="tab-panel" id="tab-disclosure">
+      <div class="panel-header">
+        <h2>Ind AS 116 Disclosure Notes</h2>
+        <p>Auto-generated disclosure compliant with paragraphs 52–60 of Ind AS 116.</p>
+      </div>
+      <div id="disclosureContainer"></div>
+    </section>
+
+    <!-- ══════════════════════════════════════ -->
+    <!-- TAB 7: COMPLIANCE MAPPING              -->
+    <!-- ══════════════════════════════════════ -->
+    <section class="tab-panel" id="tab-compliance">
+      <div class="panel-header">
+        <h2>Ind AS 116 Compliance Mapping</h2>
+        <p>Mapping of each output to the relevant paragraph of Ind AS 116.</p>
+      </div>
+      <div id="complianceContainer"></div>
+    </section>
+
+    <!-- ══════════════════════════════════════ -->
+    <!-- TAB 8: PORTFOLIO                       -->
+    <!-- ══════════════════════════════════════ -->
+    <section class="tab-panel" id="tab-portfolio">
+      <div class="panel-header">
+        <h2>Multi-Lease Portfolio</h2>
+        <p>Manage multiple leases. Save the current computation and switch between leases.</p>
+      </div>
+      <div class="portfolio-toolbar">
+        <button class="btn-primary" id="saveLeaseBtn">💾 Save Current Lease</button>
+        <button class="btn-secondary" id="newLeaseBtn">➕ New Lease</button>
+      </div>
+      <div id="portfolioList"></div>
+      <div class="section-title" style="margin-top:28px;">Portfolio Totals</div>
+      <div class="kpi-grid" id="portfolioKPIs"></div>
+
+      <!-- Audit Trail -->
+      <div class="section-title" style="margin-top:28px;">🕵️ Audit Trail</div>
+      <div class="table-wrapper">
+        <table class="data-table" id="auditTable">
+          <thead>
+            <tr>
+              <th style="text-align:left;">Timestamp</th>
+              <th style="text-align:left;">Action</th>
+            </tr>
+          </thead>
+          <tbody id="auditBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Tooltip popup -->
+  <div class="tooltip-popup" id="tooltipPopup"></div>
+
+  <!-- Scripts -->
+  <script src="js/utils.js?v=2"></script>
+  <script src="js/calculator.js?v=2"></script>
+  <script src="js/schedules.js?v=2"></script>
+  <script src="js/journals.js?v=2"></script>
+  <script src="js/reports.js?v=2"></script>
+  <script src="js/template.js?v=2"></script>
+  <script src="js/upload.js?v=2"></script>
+  <script src="js/export.js?v=2"></script>
+  <script src="js/app.js?v=2"></script>
+  <script>
+    // Initialise all flatpickr date pickers with DD-MM-YYYY format
+    document.querySelectorAll('.date-picker').forEach(function(el) {
+      flatpickr(el, {
+        dateFormat: 'd-m-Y',
+        allowInput: true,
+        disableMobile: true,
+        onChange: function() {
+          // fire change event so autoTerm picks it up
+          el.dispatchEvent(new Event('change'));
+        }
+      });
+    });
+  </script>
+</body>
+</html>
