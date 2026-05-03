@@ -422,3 +422,56 @@ select option { background: var(--bg-surface); }
   .fs-grid { grid-template-columns: 1fr; }
   .kpi-grid { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* ── DISCLAIMER TAB ── */
+.disclaimer-wrap { max-width: 860px; margin: 0 auto; }
+
+.disclaimer-hero {
+  display: flex; align-items: center; gap: 20px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border-radius: var(--radius); padding: 28px 32px; margin-bottom: 20px;
+  color: #fff;
+}
+.disclaimer-seal { font-size: 42px; flex-shrink: 0; }
+.disclaimer-tool-name { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+.disclaimer-author  { font-size: 13px; opacity: 0.85; font-weight: 400; }
+
+.disclaimer-alert {
+  background: #fff8e1; border: 1px solid #f59e0b;
+  border-left: 5px solid #f59e0b; border-radius: var(--radius-sm);
+  color: #92400e; padding: 14px 18px; font-size: 13px;
+  margin-bottom: 20px; line-height: 1.6;
+}
+
+.disclaimer-sections { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+
+.disclaimer-section {
+  display: flex; gap: 0; background: var(--bg-card);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  overflow: hidden; transition: box-shadow var(--transition);
+}
+.disclaimer-section:hover { box-shadow: var(--shadow); }
+
+.disclaimer-section-num {
+  min-width: 52px; background: linear-gradient(180deg, var(--accent), var(--accent2));
+  color: #fff; font-size: 22px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; letter-spacing: -1px;
+}
+
+.disclaimer-section-body { padding: 16px 20px; flex: 1; }
+.disclaimer-section-title {
+  font-size: 13px; font-weight: 700; color: var(--accent2);
+  margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;
+}
+.disclaimer-section-body p {
+  font-size: 13px; color: var(--text-secondary); line-height: 1.75;
+}
+.disclaimer-section-body p strong { color: var(--text-primary); }
+
+.disclaimer-footer {
+  border-top: 2px solid var(--border); padding-top: 18px;
+  text-align: center; margin-top: 8px;
+}
+.disclaimer-footer-copy { font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+.disclaimer-footer-tool { font-size: 12px; color: var(--text-muted); }
