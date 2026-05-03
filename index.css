@@ -446,23 +446,23 @@ select option { background: var(--bg-surface); }
 .disclaimer-sections { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
 
 .disclaimer-section {
-  display: flex; gap: 0; background: var(--bg-card);
-  border: 1px solid var(--border); border-radius: var(--radius);
-  overflow: hidden; transition: box-shadow var(--transition);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  transition: box-shadow var(--transition);
 }
 .disclaimer-section:hover { box-shadow: var(--shadow); }
 
-.disclaimer-section-num {
-  min-width: 52px; background: linear-gradient(180deg, var(--accent), var(--accent2));
-  color: #fff; font-size: 22px; font-weight: 700;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0; letter-spacing: -1px;
-}
-
-.disclaimer-section-body { padding: 16px 20px; flex: 1; }
+.disclaimer-section-body { flex: 1; }
 .disclaimer-section-title {
-  font-size: 13px; font-weight: 700; color: var(--accent2);
-  margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--accent2);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  margin-bottom: 8px;
 }
 .disclaimer-section-body p {
   font-size: 13px; color: var(--text-secondary); line-height: 1.75;
