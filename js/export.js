@@ -504,8 +504,23 @@ const Export = (() => {
     doc.setFontSize(10); doc.setTextColor(100, 116, 139);
     doc.text('Generated: ' + new Date().toLocaleDateString('en-IN') + ' by CA JIMI R MODI', PAGE_W / 2, 72, { align: 'center' });
 
-    // ── Disclaimer page (page 2) ──
+    // ── Cover page lease info card (page 1) ──
+    doc.setFillColor(255, 255, 255); doc.roundedRect(20, 85, PAGE_W - 40, 90, 4, 4, 'F');
+    doc.setTextColor(15, 23, 42); doc.setFontSize(9);
+    const sl = [['Lease Start', Utils.fmtDate(inputs.startDate)], ['Lease End', Utils.fmtDate(inputs.endDate)],
+      ['Term', inputs.leaseTerm + ' months'], ['IBR / ROI', inputs.roi + '% p.a.'],
+      ['Frequency', Utils.freqLabel[inputs.frequency]], ['Initial Liability', '₹' + Utils.fmtNum(pvResult.totalPV)],
+      ['ROU Asset', '₹' + Utils.fmtNum(inputs.rouInitial)], ['Total Interest', '₹' + Utils.fmtNum(inputs.totalInterest)],
+      ['Total Payments', '₹' + Utils.fmtNum(inputs.totalPayments)]];
+    sl.forEach(([k, v], i) => {
+      const col = i % 3, row = Math.floor(i / 3), x = 28 + col * ((PAGE_W - 56) / 3);
+      doc.setTextColor(100, 116, 139); doc.setFont('helvetica', 'normal'); doc.text(k, x, 97 + row * 18);
+      doc.setTextColor(15, 23, 42); doc.setFont('helvetica', 'bold'); doc.text(v, x, 104 + row * 18);
+    });
+
+    // ── Disclaimer – separate page 2 ──
     doc.addPage();
+    doc.setFillColor(240, 249, 255); doc.rect(0, 0, PAGE_W, doc.internal.pageSize.getHeight(), 'F');
     doc.setFillColor(...DARK); doc.rect(0, 0, PAGE_W, 22, 'F');
     doc.setTextColor(...ACCENT); doc.setFontSize(12); doc.setFont('helvetica', 'bold');
     doc.text('DISCLAIMER & TERMS OF USE', 10, 14);
@@ -540,26 +555,11 @@ const Export = (() => {
       dy += 14;
     });
 
-    // Footer
+    // Disclaimer footer bar
     const ph = doc.internal.pageSize.getHeight();
     doc.setFillColor(...DARK); doc.rect(0, ph - 12, PAGE_W, 12, 'F');
     doc.setTextColor(...ACCENT); doc.setFontSize(7.5); doc.setFont('helvetica', 'bold');
     doc.text('\u00A9 CA Jimi R Modi — Practicing Chartered Accountant  |  Ind AS 116 Lease Accounting Tool', PAGE_W / 2, ph - 4, { align: 'center' });
-
-
-
-    doc.setFillColor(255, 255, 255); doc.roundedRect(20, 85, PAGE_W - 40, 90, 4, 4, 'F'); // White card
-    doc.setTextColor(15, 23, 42); doc.setFontSize(9);
-    const sl = [['Lease Start', Utils.fmtDate(inputs.startDate)], ['Lease End', Utils.fmtDate(inputs.endDate)],
-      ['Term', inputs.leaseTerm + ' months'], ['IBR / ROI', inputs.roi + '% p.a.'],
-      ['Frequency', Utils.freqLabel[inputs.frequency]], ['Initial Liability', '₹' + Utils.fmtNum(pvResult.totalPV)],
-      ['ROU Asset', '₹' + Utils.fmtNum(inputs.rouInitial)], ['Total Interest', '₹' + Utils.fmtNum(inputs.totalInterest)],
-      ['Total Payments', '₹' + Utils.fmtNum(inputs.totalPayments)]];
-    sl.forEach(([k, v], i) => {
-      const col = i % 3, row = Math.floor(i / 3), x = 28 + col * ((PAGE_W - 56) / 3);
-      doc.setTextColor(100, 116, 139); doc.setFont('helvetica', 'normal'); doc.text(k, x, 97 + row * 18);
-      doc.setTextColor(15, 23, 42); doc.setFont('helvetica', 'bold'); doc.text(v, x, 104 + row * 18);
-    });
 
     let y = addPage('Present Value Calculation');
     doc.autoTable({ startY: y, theme: 'grid', head: [['#', 'Date', 'Period', 'Payment (₹)', 'Discount Factor', 'PV (₹)']], body: pvResult.schedule.map(r => [r.index, Utils.fmtDate(r.date), r.period, Utils.fmtNum(r.payment), r.discountFactor.toFixed(6), Utils.fmtNum(r.pv)]), foot: [['', '', 'Total', Utils.fmtNum(pvResult.schedule.reduce((s, r) => s + r.payment, 0)), '', Utils.fmtNum(pvResult.totalPV)]], ..._pdfTableStyle(DARK, ACCENT) });
@@ -574,7 +574,7 @@ const Export = (() => {
         r.index,
         Utils.fmtDate(r.date),
         r.fy,
-        r.months,
+        Math.round(r.months),
         r.ratePct + '%', Utils.fmtNum(r.openBal), Utils.fmtNum(r.interest), Utils.fmtNum(r.payment), Utils.fmtNum(r.closeBal)]), ..._pdfTableStyle(DARK, ACCENT) });
     y = addPage('ROU Asset – Depreciation');
     doc.autoTable({ startY: y, theme: 'grid', head: [['FY', 'Opening BV (₹)', 'Depreciation (₹)', 'Closing BV (₹)']], body: rouRows.map(r => [r.fy, Utils.fmtNum(r.openBV), Utils.fmtNum(r.dep), Utils.fmtNum(r.closeBV)]), ..._pdfTableStyle(DARK, ACCENT) });
