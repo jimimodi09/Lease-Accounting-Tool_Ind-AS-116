@@ -161,7 +161,7 @@
     const sd = Utils.parseDate(startStr), ed = Utils.parseDate(endStr);
     if (!sd || !ed) return null;
     const termMonths = Utils.monthsBetween(sd, ed);
-    const dates = Calculator.generatePaymentDates(sd, frequency, timing, termMonths);
+    const dates = Calculator.generatePaymentDates(sd, frequency, timing, termMonths, ed);
     if (!dates.length) return null;
 
     const intervalMonths = Utils.freqMonths[frequency];  // months per payment
