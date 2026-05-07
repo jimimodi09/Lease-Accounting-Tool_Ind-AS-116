@@ -110,7 +110,7 @@ const Template = (() => {
     addField('Lease Incentives Received (₹)','0','Deducted from ROU asset (Para 24(b))',false,'amount');
     addField('Restoration / Dismantling Costs (₹)','0','Estimated restoration cost (Para 24(d))',false,'amount');
     addField('Residual Value Guarantee (₹)','0','Added to last payment for PV calculation',false,'amount');
-    addField('Financial Year Start (Month)','4','4=April (Indian FY)  |  1=January (Calendar Year)',false,'fystart');
+    addField('Financial Year Start (Month)','April','Select from dropdown: April | January | July | October',false,'fystart');
     addField('Opening Lease Liability (₹)','','For Ind AS 116 transition only — leave blank for fresh computation',false,'amount');
 
     // Footer
@@ -128,9 +128,8 @@ const Template = (() => {
         formulae:[exSer(2000,1,1),exSer(2099,12,31)],
         showInputMessage:true,
         promptTitle:i===0?'Lease Start Date':'Lease End Date',
-        prompt:'Click to open calendar or type date as DD-MM-YYYY (e.g. 01-04-2024)',
-        showErrorMessage:true,errorTitle:'Invalid Date',
-        error:'Please enter a valid date. Format: DD-MM-YYYY',
+        prompt:'Click to open calendar picker, or type manually as DD-MM-YYYY (e.g. 01-04-2024)',
+        showErrorMessage:false,  // allow manual text entry without blocking error
       };
     });
     // Frequency dropdown
@@ -145,11 +144,11 @@ const Template = (() => {
       formulae:['"end,beginning"'],
       errorTitle:'Invalid',error:'Choose: end (last day) or beginning (first day)',
     };
-    // FY Start dropdown
+    // FY Start dropdown — month names for user-friendliness; upload.js maps name→number
     ws1.getCell(`B${ROW.fyStart}`).dataValidation={
       type:'list',allowBlank:false,showErrorMessage:true,
-      formulae:['"4,1,7,10"'],
-      errorTitle:'Invalid',error:'Enter: 4 (April), 1 (January), 7 (July) or 10 (October)',
+      formulae:['"April,January,July,October"'],
+      errorTitle:'Invalid',error:'Select a month from the dropdown list',
     };
 
     /* ════ SHEET 2 — PAYMENT SCHEDULE ════ */

@@ -146,13 +146,24 @@ const Upload = (() => {
       }
 
       // Coerce to string for non-date fields only at this point
-      const strVal = value.toString().trim();
+      let strVal = value.toString().trim();
 
       if (id === 'frequency' && !VALID_FREQ.includes(strVal.toLowerCase())) {
         errors.push(`"${field}": must be ${VALID_FREQ.join(' | ')}`); return;
       }
       if (id === 'paymentTiming' && !VALID_TIMING.includes(strVal.toLowerCase())) {
         errors.push(`"${field}": must be end | beginning`); return;
+      }
+
+      // Map month names → numbers for Financial Year Start (template uses friendly names)
+      if (id === 'fyStart') {
+        const MONTH_MAP = {
+          'april': '4', 'jan': '1', 'january': '1',
+          'july': '7', 'jul': '7', 'october': '10', 'oct': '10',
+        };
+        const mapped = MONTH_MAP[strVal.toLowerCase().trim()];
+        if (mapped) strVal = mapped;
+        // If it's already a valid number (1,4,7,10), keep as-is
       }
 
       const el = document.getElementById(id);
@@ -165,6 +176,7 @@ const Upload = (() => {
     });
     return errors;
   };
+
 
   /** Parse CSV text into [{field, value}] */
   const parseCSV = (text) => {
