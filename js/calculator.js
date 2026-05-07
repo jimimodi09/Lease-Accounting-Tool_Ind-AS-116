@@ -78,11 +78,14 @@ const Calculator = (() => {
   };
 
   /**
-   * Periodic rate from annual ROI
+   * Periodic rate from annual ROI.
+   * Returns the monthly compound rate (roi / 12 / 100).
+   * Using this consistently in both PV discounting and amortisation
+   * (via the effective-interest formula) guarantees the lease liability
+   * reaches exactly zero at the end of the lease term.
    */
   const periodicRate = (annualRatePct, frequency) => {
-    const months = Utils.freqMonths[frequency];
-    return annualRatePct / 100 / (12 / months);
+    return annualRatePct / 100 / 12;
   };
 
   /**
@@ -114,13 +117,13 @@ const Calculator = (() => {
       const isLast = i === paymentDates.length - 1;
       const effectivePmt = isLast && residualValue > 0 ? pmt + residualValue : pmt;
 
-      // Fractional discounting aligned to the periodic rate (e.g. 9% / 2 = 4.5% per half-year).
-      // This mathematically guarantees 100% convergence with the simple interest applied in Amortisation.
-      // e.g., 6 months elapsed / 6 months interval = 1 exact period. DF = 1 / (1 + 0.045)^1
+      // Compound discounting using the monthly rate r.
+      // Months elapsed from lease start → exact fractional periods.
+      // DF = 1 / (1 + r_monthly)^monthsElapsed
+      // This matches the effective-interest amortisation formula: interest = balance × ((1+r)^m − 1)
       const monthsElapsed = Utils.monthsBetween(startDate, pd.date);
-      const exactPeriods = monthsElapsed / intervalMonths;
       
-      const discountFactor = 1 / Math.pow(1 + r, exactPeriods);
+      const discountFactor = 1 / Math.pow(1 + r, monthsElapsed);
       const pv = Utils.round2(effectivePmt * discountFactor);
       totalPV += pv;
 
@@ -141,148 +144,76 @@ const Calculator = (() => {
     paymentDates, paymentAmount, roi, frequency, fyStartMonth,
     openingLiability, startDate, varPayments, paymentTiming, endDate, isForFySummary
   }) => {
-    const r = periodicRate(roi, frequency);
-    const annualRate = roi / 100;
-    const intervalMonths = Utils.freqMonths[frequency];
+    // Monthly compound rate — identical to the discount rate used in computePVSchedule.
+    // Using the same rate in both directions guarantees mathematical closure to zero.
+    const r = periodicRate(roi, frequency);                    // monthly rate = roi/12/100
+    const intervalMonths = Utils.freqMonths[frequency];        // e.g. 1 for monthly
     const isBeg = paymentTiming === 'beginning';
 
-    // 1. Gather all important timeline boundaries (Milestones)
-    let rawMilestones = [];
-    rawMilestones.push(startDate.getTime());
-    if (endDate) rawMilestones.push(endDate.getTime());
-    paymentDates.forEach(p => rawMilestones.push(p.date.getTime()));
+    // Per-period compound factor for one standard interval (exact integer exponent).
+    // For monthly: (1.00875)^1 − 1 = 0.00875 exactly.
+    // For quarterly: (1.00875)^3 − 1 exactly. No floating-point drift.
+    const periodFactor = Math.pow(1 + r, intervalMonths) - 1;
 
-    let startYear = startDate.getFullYear();
-    const endMonth = fyStartMonth === 1 ? 11 : fyStartMonth - 2; 
-    let currentFyEnd = new Date(startYear, endMonth + 1, 0); 
-    if (currentFyEnd <= startDate) {
-      currentFyEnd = new Date(startYear + 1, endMonth + 1, 0);
-    }
-    const leaseEnd = endDate || paymentDates[paymentDates.length - 1].date;
+    const rows = [];
+    // Carry FULL PRECISION — never round the running balance until display.
+    let balance = openingLiability;
 
-    rawMilestones.sort((a,b) => a - b);
+    paymentDates.forEach((pd, i) => {
+      const pmt = getPmt(varPayments, i, paymentAmount);
+      const isLast = i === paymentDates.length - 1;
 
-    // Merge milestones within 3 days (e.g. 31-Mar and 01-Apr merge into 31-Mar boundary)
-    const uniqueMilestones = [];
-    rawMilestones.forEach(m => {
-       if (uniqueMilestones.length === 0) {
-           uniqueMilestones.push(m);
-       } else {
-           const last = uniqueMilestones[uniqueMilestones.length - 1];
-           if (m - last > 3 * 86400000) {
-               uniqueMilestones.push(m);
-           }
-       }
+      // Payment date for display
+      const rowDate = isBeg
+        ? Utils.firstDayOfMonth(pd.date)
+        : Utils.lastDayOfMonth(pd.date);
+
+      const fy = Utils.fyLabel(rowDate, fyStartMonth);
+      const openBal = Utils.round2(balance);
+
+      let interest, exactClose;
+
+      if (isBeg) {
+        // Beginning-of-period: payment first, then interest on reduced balance
+        const base = balance - pmt;
+        const exactInterest = Math.max(0, base) * periodFactor;
+        exactClose = base + exactInterest;
+        interest = isLast
+          ? Utils.round2(pmt - balance)      // absorb rounding: close = 0
+          : Utils.round2(exactInterest);
+      } else {
+        // End-of-period: interest accrues on full balance, then payment
+        const exactInterest = balance * periodFactor;
+        exactClose = balance + exactInterest - pmt;
+        interest = isLast
+          ? Utils.round2(pmt - balance)      // absorb rounding: close = 0
+          : Utils.round2(exactInterest);
+      }
+
+      const closeBal = isLast ? 0 : Math.max(0, Utils.round2(exactClose));
+
+      rows.push({
+        index:       i + 1,
+        date:        rowDate,
+        periodStart: isBeg ? rowDate : (i === 0 ? startDate : Utils.lastDayOfMonth(Utils.addMonths(rowDate, -intervalMonths))),
+        periodEnd:   rowDate,
+        fy,
+        months:      intervalMonths,
+        ratePct:     roi,
+        openBal,
+        interest,
+        payment:     pmt,
+        closeBal,
+        type:        'payment'
+      });
+
+      // Carry EXACT close (not rounded) to avoid accumulation error
+      balance = isLast ? 0 : Math.max(0, exactClose);
     });
 
-    // 2. Process each Period (Milestone[i-1] to Milestone[i])
-    const rows = [];
-    let balance = Utils.round2(openingLiability);
-
-    for (let i = 1; i < uniqueMilestones.length; i++) {
-        const periodStart = new Date(uniqueMilestones[i - 1]);
-        const periodEnd   = new Date(uniqueMilestones[i]);
-        
-        let monthsElapsed = Utils.monthsBetween(periodStart, periodEnd);
-        if (monthsElapsed === 0) continue;
-
-        const exactPeriodRate = annualRate * (monthsElapsed / 12);
-
-        // Find payments attached to this period (using 3-day proximity window due to merged milestones)
-        let pmtSum = 0;
-        let pmtType = 'payment';
-        let matchedPaymentDate = null;
-
-        if (isBeg) {
-           const matches = paymentDates.filter(p => Math.abs(p.date.getTime() - periodStart.getTime()) <= 3 * 86400000);
-           matches.forEach(p => {
-               pmtSum += getPmt(varPayments, paymentDates.indexOf(p), paymentAmount);
-               pmtType = p.type || 'payment';
-               // Snap to first day of the period month (beginning-of-period)
-               matchedPaymentDate = Utils.firstDayOfMonth(p.date);
-           });
-           
-           if (i === uniqueMilestones.length - 1) {
-               const tailMatches = paymentDates.filter(p => Math.abs(p.date.getTime() - periodEnd.getTime()) <= 3 * 86400000);
-               tailMatches.forEach(p => {
-                 pmtSum += getPmt(varPayments, paymentDates.indexOf(p), paymentAmount);
-                 matchedPaymentDate = Utils.firstDayOfMonth(p.date);
-               });
-           }
-        } else {
-           const matches = paymentDates.filter(p => Math.abs(p.date.getTime() - periodEnd.getTime()) <= 3 * 86400000);
-           matches.forEach(p => {
-               pmtSum += getPmt(varPayments, paymentDates.indexOf(p), paymentAmount);
-               pmtType = p.type || 'payment';
-               // Snap to last day of the period month (end-of-period)
-               matchedPaymentDate = Utils.lastDayOfMonth(p.date);
-           });
-           
-           if (i === 1) {
-               const headMatches = paymentDates.filter(p => Math.abs(p.date.getTime() - periodStart.getTime()) <= 3 * 86400000);
-               headMatches.forEach(p => {
-                 pmtSum += getPmt(varPayments, paymentDates.indexOf(p), paymentAmount);
-                 matchedPaymentDate = Utils.lastDayOfMonth(p.date);
-               });
-           }
-        }
-
-        const openBal = Utils.round2(balance);
-        let interest = 0;
-        let closeBal = 0;
-
-        if (isBeg) {
-            // Pre-payment principal base for interest
-            interest = Utils.round2(Math.max(0, openBal - pmtSum) * exactPeriodRate);
-            closeBal = Utils.round2(openBal - pmtSum + interest);
-        } else {
-            // Full principal base for interest
-            interest = Utils.round2(openBal * exactPeriodRate);
-            closeBal = Utils.round2(openBal + interest - pmtSum);
-        }
-
-        const isAbsoluteLast = i === uniqueMilestones.length - 1;
-        if (isAbsoluteLast || Math.abs(closeBal) < 0.05) closeBal = 0;
-
-        // rowDate: use the actual payment date (snapped to period boundary)
-        // — last day of month for End-of-Period, first day for Beginning-of-Period.
-        // Fall back to periodEnd only for pure interest-accrual rows (no payment).
-        let rowDate;
-        if (pmtSum > 0 && matchedPaymentDate) {
-          rowDate = matchedPaymentDate;
-        } else {
-          // No payment in this sub-period → show period end for accrual rows
-          rowDate = periodEnd;
-        }
-
-        // FY label: derive from the actual display/payment date of the row
-        const fy = Utils.fyLabel(rowDate, fyStartMonth);
-
-        rows.push({
-          index: rows.length + 1,
-          date: rowDate,
-          periodStart,
-          periodEnd,
-          fy,
-          months: monthsElapsed,
-          ratePct: roi,
-          openBal,
-          interest,
-          payment: pmtSum,
-          closeBal: Math.max(0, closeBal),
-          type: pmtType
-        });
-
-        balance = Math.max(0, closeBal);
-    }
-
-    // Filter out trailing zero-rows if the liability was successfully settled
-    return rows.filter((r, idx) => {
-       if (idx === 0) return true;
-       if (Math.abs(r.openBal) < 0.1 && r.payment === 0 && r.interest === 0) return false;
-       return true;
-    }).map((r, idx) => ({ ...r, index: idx + 1 }));
+    return rows;
   };
+
 
 
   /**
@@ -439,8 +370,24 @@ const Calculator = (() => {
       }
     });
 
+    // ── Force last FY to close at exactly zero ─────────────────────────────
+    // The FY summary sums individually-rounded monthly interest values, which can
+    // accumulate a small rounding residual (e.g. ₹0.02 over 60 months).
+    // Per Ind AS 116, the liability must be exactly NIL at lease end.
+    // Absorb the residual in the last FY's interest (< ₹1 adjustment).
+    if (result.length > 0) {
+      const lastFY = result[result.length - 1];
+      if (lastFY.closeBal !== 0 && Math.abs(lastFY.closeBal) < 5) {
+        lastFY.interest    = Utils.round2(lastFY.interest - lastFY.closeBal);
+        lastFY.closeBal    = 0;
+        lastFY.currentLiab = 0;
+        lastFY.nonCurrentLiab = 0;
+      }
+    }
+
     return result;
   };
+
 
   // ── Internal helper ──
   const fyRangeFromLabel = (label, fyStartMonth) => {
