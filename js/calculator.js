@@ -78,14 +78,24 @@ const Calculator = (() => {
   };
 
   /**
-   * Periodic rate from annual ROI.
-   * Returns the monthly compound rate (roi / 12 / 100).
-   * Using this consistently in both PV discounting and amortisation
-   * (via the effective-interest formula) guarantees the lease liability
-   * reaches exactly zero at the end of the lease term.
+   * Period rate from annual IBR.
+   *
+   * Standard Ind AS 116 / Excel PV() convention:
+   *   period_rate = IBR% / periods_per_year
+   *
+   * e.g.  IBR 10.5% annual:
+   *   Monthly    → 10.5/12  = 0.875%  per month
+   *   Quarterly  → 10.5/4   = 2.625%  per quarter
+   *   Half-yearly→ 10.5/2   = 5.25%   per half-year
+   *   Annual     → 10.5/1   = 10.5%   per year
+   *
+   * This matches Excel =PV(), =PMT(), =NPER() and Big-4 lease templates.
+   * Both PV discounting and amortisation use the SAME rate, guaranteeing
+   * the liability closes to exactly zero at lease end.
    */
   const periodicRate = (annualRatePct, frequency) => {
-    return annualRatePct / 100 / 12;
+    const periodsPerYear = 12 / Utils.freqMonths[frequency];
+    return annualRatePct / 100 / periodsPerYear;
   };
 
   /**
@@ -117,13 +127,13 @@ const Calculator = (() => {
       const isLast = i === paymentDates.length - 1;
       const effectivePmt = isLast && residualValue > 0 ? pmt + residualValue : pmt;
 
-      // Compound discounting using the monthly rate r.
-      // Months elapsed from lease start → exact fractional periods.
-      // DF = 1 / (1 + r_monthly)^monthsElapsed
-      // This matches the effective-interest amortisation formula: interest = balance × ((1+r)^m − 1)
-      const monthsElapsed = Utils.monthsBetween(startDate, pd.date);
-      
-      const discountFactor = 1 / Math.pow(1 + r, monthsElapsed);
+      // Standard period discounting: DF = 1 / (1 + period_rate)^periodNumber
+      // periodNumber = elapsed months ÷ interval months  (e.g. 24 months ÷ 12 = period 2)
+      // This is identical to Excel =PV() and matches the amortisation below.
+      const monthsElapsed  = Utils.monthsBetween(startDate, pd.date);
+      const periodNumber   = intervalMonths > 0 ? monthsElapsed / intervalMonths : (i + 1);
+
+      const discountFactor = 1 / Math.pow(1 + r, periodNumber);
       const pv = Utils.round2(effectivePmt * discountFactor);
       totalPV += pv;
 
@@ -144,16 +154,17 @@ const Calculator = (() => {
     paymentDates, paymentAmount, roi, frequency, fyStartMonth,
     openingLiability, startDate, varPayments, paymentTiming, endDate, isForFySummary
   }) => {
-    // Monthly compound rate — identical to the discount rate used in computePVSchedule.
-    // Using the same rate in both directions guarantees mathematical closure to zero.
-    const r = periodicRate(roi, frequency);                    // monthly rate = roi/12/100
-    const intervalMonths = Utils.freqMonths[frequency];        // e.g. 1 for monthly
+    // Period rate — identical to the rate used in computePVSchedule.
+    // period_rate = IBR / periods_per_year  (standard Ind AS 116 / Excel convention)
+    // e.g. 10.5% annual, quarterly → 2.625% per quarter.
+    // Using the same rate in both PV and amortisation guarantees closure to zero.
+    const r = periodicRate(roi, frequency);                    // period rate (IBR/freq)
+    const intervalMonths = Utils.freqMonths[frequency];        // e.g. 12 for annual
     const isBeg = paymentTiming === 'beginning';
 
-    // Per-period compound factor for one standard interval (exact integer exponent).
-    // For monthly: (1.00875)^1 − 1 = 0.00875 exactly.
-    // For quarterly: (1.00875)^3 − 1 exactly. No floating-point drift.
-    const periodFactor = Math.pow(1 + r, intervalMonths) - 1;
+    // The period factor IS the period rate — no further compounding needed.
+    // interest = opening_balance × period_rate  (one clean multiplication, fully auditable)
+    const periodFactor = r;
 
     const rows = [];
     // Carry FULL PRECISION — never round the running balance until display.

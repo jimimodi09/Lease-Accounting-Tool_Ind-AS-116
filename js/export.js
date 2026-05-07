@@ -155,18 +155,21 @@ const Export = (() => {
     addTitle(ws2, 'Present Value of Lease Payments', 6);
     addSub(ws2, `Lease: ${name}   |   IBR: ${inputs.roi}% p.a.   |   Frequency: ${Utils.freqLabel[inputs.frequency]}`, 6);
 
-    // Param row — periodic rate (for formula reference)
+    // Param row — period rate = IBR / periodsPerYear  (matches JS periodicRate() exactly)
+    const periodsPerYear = 12 / Utils.freqMonths[inputs.frequency];
+    const periodRateVal  = inputs.roi / 100 / periodsPerYear;
     const pvParamRow = ws2.addRow([
       'Annual IBR (%)', inputs.roi / 100,
-      'Frequency (periods/yr)', 12 / Utils.freqMonths[inputs.frequency],
-      'Periodic Rate (= B3/D3)', { formula: '=B3/D3' }
+      `Period Rate (IBR ÷ ${periodsPerYear} periods/yr)`, periodRateVal,
+      '', ''
     ]);
     styleParam(pvParamRow);
     pvParamRow.getCell(2).numFmt = '0.00%';
-    pvParamRow.getCell(6).numFmt = '0.00000%';
-    right(pvParamRow, [2, 4, 6]);
+    pvParamRow.getCell(4).numFmt = '0.000000%';
+    right(pvParamRow, [2, 4]);
     pvParamRow.height = 18;
-    const RATE2_CELL = 'F3';   // periodic rate cell for PV sheet
+    // D3 = period rate cell (same column used in DF formula and amort sheet)
+    const RATE2_CELL = 'D3';
 
     const pvHdr = ws2.addRow(['#', 'Payment Date', 'Period (months)', 'Lease Payment (₹)', 'Discount Factor', 'Present Value (₹)']);
     styleHeader(pvHdr);
@@ -175,15 +178,16 @@ const Export = (() => {
 
     pvResult.schedule.forEach((r, idx) => {
       const rn  = PV_DATA_START + idx;
-      // n = period index: end-of-period = idx+1, beginning = idx
-      const n   = inputs.paymentTiming === 'beginning' ? idx : idx + 1;
+      // Period number: 1, 2, 3 … (end-of-period) or 0, 1, 2 … (beginning-of-period)
+      // DF = 1 / (1 + period_rate)^n  — identical to Excel =PV() convention
+      const n = inputs.paymentTiming === 'beginning' ? idx : idx + 1;
       const row = ws2.addRow([
         r.index,
         Utils.fmtDate(r.date),
-        r.period,
+        n,                                          // Period # as exponent
         r.payment,
-        f(`=1/(1+$${RATE2_CELL})^${n}`),  // Discount Factor formula
-        f(`=D${rn}*E${rn}`)               // PV formula
+        f(`=1/(1+$${RATE2_CELL})^${n}`),           // DF = 1/(1+period_rate)^n
+        f(`=D${rn}*E${rn}`)                        // PV = Payment × DF
       ]);
       styleData(row, idx);
       row.getCell(4).numFmt = NUM_INR;
@@ -211,13 +215,19 @@ const Export = (() => {
     addTitle(ws3, 'Lease Liability – Amortisation Schedule', 9);
     addSub(ws3, `Effective Interest Method (Ind AS 116 Para 36)   |   Lease: ${name}`, 9);
 
+    // Period rate = IBR / periods_per_year (stored in D3 for formula reference)
+    const amPeriodsPerYear = 12 / Utils.freqMonths[inputs.frequency];
+    const amPeriodRate     = inputs.roi / 100 / amPeriodsPerYear;
     const amParamRow = ws3.addRow([
       'Annual IBR (%)', inputs.roi / 100,
+      `Period Rate (IBR ÷ ${amPeriodsPerYear})`, amPeriodRate,
       'Timing', inputs.paymentTiming
     ]);
     styleParam(amParamRow);
     amParamRow.getCell(2).numFmt = '0.00%';
+    amParamRow.getCell(4).numFmt = '0.000000%';
     amParamRow.height = 18;
+    const AM_PERIOD_RATE = 'D3'; // period rate cell — used in interest formula
 
     const amHdr = ws3.addRow(['#', 'Date', 'FY', 'Months', 'Rate', 'Opening Balance (₹)', 'Interest (₹)', 'Payment (₹)', 'Closing Balance (₹)']);
     styleHeader(amHdr);
@@ -230,12 +240,13 @@ const Export = (() => {
         ? r.openBal                          // first row: hardcoded initial PV
         : f(`=I${rn - 1}`);                  // subsequent: previous closing balance (I is col 9)
 
-      // Interest formula: OpenBal(F) * Rate(E) * (Months(D)/12)
-      // IF beginning: (Open(F) - Pmt(H)) * Rate(E) * (Months(D)/12)
+      // Interest = Opening × period_rate  (effective interest method, one multiplication)
+      // $D$3 = period rate (IBR / periods_per_year)
+      // For beginning-of-period: interest accrues on (Opening − Payment)
       const isBeg = inputs.paymentTiming === 'beginning';
       const intFormula = isBeg
-        ? f(`=ROUND(MAX(0,F${rn}-H${rn})*E${rn}*(D${rn}/12), 2)`)
-        : f(`=ROUND(F${rn}*E${rn}*(D${rn}/12), 2)`);
+        ? f(`=ROUND(MAX(0,F${rn}-H${rn})*$${AM_PERIOD_RATE}, 2)`)
+        : f(`=ROUND(F${rn}*$${AM_PERIOD_RATE}, 2)`);
 
       // Closing balance: max(0, Open(F) + Int(G) - Pmt(H))
       const isLast = idx === amortRows.length - 1;
@@ -243,7 +254,7 @@ const Export = (() => {
 
       const row = ws3.addRow([
         r.index, Utils.fmtDate(r.date), r.fy,
-        r.months, r.ratePct / 100, // E col is rate
+        r.months, r.ratePct / 100,   // E = annual rate (display only)
         openBalCell, intFormula, r.payment, closeFormula
       ]);
 
