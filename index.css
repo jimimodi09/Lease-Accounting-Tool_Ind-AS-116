@@ -242,6 +242,13 @@ select option { background: var(--bg-surface); }
 .data-table tbody tr { transition: background var(--transition); }
 .data-table tbody tr:hover { background: var(--bg-card2); }
 .data-table tbody tr.fy-separator { border-top: 2px solid var(--accent2); }
+.rounding-adj {
+  font-size: 0.72em;
+  color: var(--text-muted, #888);
+  cursor: help;
+  margin-left: 2px;
+  vertical-align: super;
+}
 .data-table tbody td {
   padding: 9px 14px; border-bottom: 1px solid var(--border);
   text-align: right; font-family: var(--mono); color: var(--text-primary);

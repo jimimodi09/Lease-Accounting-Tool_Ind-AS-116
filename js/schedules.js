@@ -41,6 +41,10 @@ const Schedules = (() => {
 
     amortRows.forEach(row => {
       const fyBreak = prevFY && prevFY !== row.fy ? 'fy-separator' : '';
+      // Last period: show rounding adjustment note if interest was adjusted to close to zero
+      const intDisplay = row.isRoundingAdj
+        ? `${Utils.fmtNum(row.interest)} <span class="rounding-adj" title="Theoretical interest at ${row.ratePct}%: ₹${Utils.fmtNum(row.interest - row.roundingAdj)}. Adjusted by ₹${Math.abs(row.roundingAdj).toFixed(2)} to close schedule to zero (standard rounding).">*</span>`
+        : Utils.fmtNum(row.interest);
       body.insertAdjacentHTML('beforeend', `
         <tr class="${fyBreak}">
           <td>${row.index}</td>
@@ -49,7 +53,7 @@ const Schedules = (() => {
           <td>${Math.round(row.months)}</td>
           <td>${row.ratePct}%</td>
           <td>${Utils.fmtNum(row.openBal)}</td>
-          <td>${Utils.fmtNum(row.interest)}</td>
+          <td>${intDisplay}</td>
           <td>${Utils.fmtNum(row.payment)}</td>
           <td>${Utils.fmtNum(row.closeBal)}</td>
         </tr>`);

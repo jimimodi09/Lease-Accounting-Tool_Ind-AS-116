@@ -203,19 +203,26 @@ const Calculator = (() => {
 
       const closeBal_final = closeBal;
 
+      // For the last period, compute the theoretical interest (rate × opening)
+      // to determine the rounding adjustment amount.
+      const theoreticalInterest = isLast ? Utils.round2(balance * periodFactor) : null;
+      const roundingAdj = isLast ? Utils.round2(interest - theoreticalInterest) : 0;
+
       rows.push({
-        index:       i + 1,
-        date:        rowDate,
-        periodStart: isBeg ? rowDate : (i === 0 ? startDate : Utils.lastDayOfMonth(Utils.addMonths(rowDate, -intervalMonths))),
-        periodEnd:   rowDate,
+        index:          i + 1,
+        date:           rowDate,
+        periodStart:    isBeg ? rowDate : (i === 0 ? startDate : Utils.lastDayOfMonth(Utils.addMonths(rowDate, -intervalMonths))),
+        periodEnd:      rowDate,
         fy,
-        months:      intervalMonths,
-        ratePct:     roi,
+        months:         intervalMonths,
+        ratePct:        roi,
         openBal,
         interest,
-        payment:     pmt,
-        closeBal:    closeBal_final,
-        type:        'payment'
+        payment:        pmt,
+        closeBal:       closeBal_final,
+        isRoundingAdj:  isLast && roundingAdj !== 0,
+        roundingAdj,
+        type:           'payment'
       });
 
       // Carry closing balance (already rounded) forward
