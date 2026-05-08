@@ -183,26 +183,25 @@ const Calculator = (() => {
       const fy = Utils.fyLabel(rowDate, fyStartMonth);
       const openBal = Utils.round2(balance);  // already rounded from previous period
 
-      let interest, exactClose;
+      let interest, closeBal;
 
       if (isBeg) {
         // Beginning-of-period: payment first, then interest on reduced balance
         const base = balance - pmt;
         const exactInterest = Math.max(0, base) * periodFactor;
-        exactClose = base + exactInterest;
-        interest = isLast
-          ? Utils.round2(pmt - balance)      // absorb rounding: close = 0
-          : Utils.round2(exactInterest);
+        // Round interest first, then derive closing from rounded figures
+        interest = isLast ? Utils.round2(pmt - balance) : Utils.round2(exactInterest);
+        closeBal = isLast ? 0 : Math.max(0, Utils.round2(balance - pmt + interest));
       } else {
         // End-of-period: interest accrues on full balance, then payment
         const exactInterest = balance * periodFactor;
-        exactClose = balance + exactInterest - pmt;
-        interest = isLast
-          ? Utils.round2(pmt - balance)      // absorb rounding: close = 0
-          : Utils.round2(exactInterest);
+        // Round interest first, then derive closing from rounded figures
+        // This guarantees: Opening + Interest − Payment = Closing exactly as displayed
+        interest = isLast ? Utils.round2(pmt - balance) : Utils.round2(exactInterest);
+        closeBal = isLast ? 0 : Math.max(0, Utils.round2(balance + interest - pmt));
       }
 
-      const closeBal = isLast ? 0 : Math.max(0, Utils.round2(exactClose));
+      const closeBal_final = closeBal;
 
       rows.push({
         index:       i + 1,
@@ -215,13 +214,13 @@ const Calculator = (() => {
         openBal,
         interest,
         payment:     pmt,
-        closeBal,
+        closeBal:    closeBal_final,
         type:        'payment'
       });
 
-      // Carry ROUNDED close forward — ensures Opening + Interest − Payment = Closing
-      // on every displayed row. Tiny cumulative residual (< ₹1) absorbed in last period.
-      balance = isLast ? 0 : Math.max(0, Utils.round2(exactClose));
+      // Carry closing balance (already rounded) forward
+      // Ensures every subsequent row's Opening = previous Closing exactly as displayed
+      balance = isLast ? 0 : closeBal_final;
     });
 
     return rows;
