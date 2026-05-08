@@ -167,7 +167,8 @@ const Calculator = (() => {
     const periodFactor = r;
 
     const rows = [];
-    // Carry FULL PRECISION — never round the running balance until display.
+    // Carry ROUNDED balance so displayed figures always tie arithmetically:
+    // Opening (displayed) + Interest (displayed) − Payment = Closing (displayed) exactly.
     let balance = openingLiability;
 
     paymentDates.forEach((pd, i) => {
@@ -180,7 +181,7 @@ const Calculator = (() => {
         : Utils.lastDayOfMonth(pd.date);
 
       const fy = Utils.fyLabel(rowDate, fyStartMonth);
-      const openBal = Utils.round2(balance);
+      const openBal = Utils.round2(balance);  // already rounded from previous period
 
       let interest, exactClose;
 
@@ -218,8 +219,9 @@ const Calculator = (() => {
         type:        'payment'
       });
 
-      // Carry EXACT close (not rounded) to avoid accumulation error
-      balance = isLast ? 0 : Math.max(0, exactClose);
+      // Carry ROUNDED close forward — ensures Opening + Interest − Payment = Closing
+      // on every displayed row. Tiny cumulative residual (< ₹1) absorbed in last period.
+      balance = isLast ? 0 : Math.max(0, Utils.round2(exactClose));
     });
 
     return rows;
