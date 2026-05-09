@@ -92,6 +92,7 @@ const Export = (() => {
   const toExcel = async (state) => {
     if (typeof ExcelJS === 'undefined') { alert('ExcelJS not loaded.'); return; }
     const { inputs, pvResult, amortRows, rouRows, fySummary, fyJournals, leaseName } = state;
+    const discState = { inputs, pvResult, fySummary, rouInitial: inputs.rouInitial, totalInterest: inputs.totalInterest, totalDep: inputs.totalDep, totalPayments: inputs.totalPayments, amortRows };
     const name = leaseName || 'Lease';
 
     const wb = new ExcelJS.Workbook();
@@ -408,7 +409,146 @@ const Export = (() => {
     const matTot = ws7.addRow(['TOTAL', f(`=SUM(B${MAT_DATA_START}:B${MAT_DATA_START + matCount - 1})`)]);
     styleTotal(matTot); matTot.getCell(2).numFmt = NUM_INR; right(matTot, [2]);
 
-    /* ── 8. DISCLAIMER SHEET ───────────────────── */
+    /* ── 8. DISCLOSURE NOTES (Ind AS 116 Para 52-60) ── */
+    const ws8 = wb.addWorksheet('Disclosure Notes', { tabColor: { argb: 'FF6366F1' } });
+    ws8.columns = [{ width: 42 }, { width: 28 }, { width: 28 }, { width: 28 }, { width: 28 }, { width: 28 }];
+    addTitle(ws8, 'Disclosure Notes – Ind AS 116 (Para 52–60)', 6);
+    addSub(ws8, `Lease: ${name}   |   Generated: ${new Date().toLocaleDateString('en-IN')} by CA JIMI R MODI`, 6);
+    ws8.addRow([]);
+
+    // Helper: section heading in disclosure sheet
+    const dSec = (ws, title) => {
+      const r = ws.addRow([title]);
+      r.height = 22;
+      const c = r.getCell(1);
+      c.font = { name: FONT, bold: true, size: 11, color: { argb: C.navyFg } };
+      c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C.navyBg } };
+      c.alignment = { vertical: 'middle', horizontal: 'left' };
+      ws.mergeCells(r.number, 1, r.number, 6);
+      ws.addRow([]);
+      return r;
+    };
+    const dText = (ws, text) => {
+      const r = ws.addRow([text]);
+      r.height = 40;
+      const c = r.getCell(1);
+      c.font = { name: FONT, size: 9, color: { argb: C.textMid } };
+      c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C.alt1 } };
+      c.alignment = { vertical: 'top', horizontal: 'left', wrapText: true };
+      ws.mergeCells(r.number, 1, r.number, 6);
+      ws.addRow([]);
+    };
+    const dTableHdr = (ws, cols) => {
+      const r = ws.addRow(cols);
+      styleHeader(r, C.tealBg, C.tealFg);
+      r.height = 20;
+      return r;
+    };
+    const dTableRow = (ws, vals, idx) => {
+      const r = ws.addRow(vals);
+      styleData(r, idx);
+      vals.forEach((v, i) => {
+        if (typeof v === 'number') {
+          r.getCell(i + 1).numFmt = NUM_INR;
+          r.getCell(i + 1).alignment = { ...r.getCell(i + 1).alignment, horizontal: 'right' };
+        }
+      });
+      return r;
+    };
+    ws8.views = [{ state: 'frozen', ySplit: 2 }];
+
+    // ── Section 1: Accounting Policy
+    dSec(ws8, '1. Accounting Policy – Leases (Ind AS 116)');
+    dText(ws8, `The Company assesses at contract inception whether a contract is, or contains, a lease. The Company recognises a right-of-use (ROU) asset and a corresponding lease liability with respect to all lease arrangements in which it is the lessee, except for short-term leases (defined as leases with a term of 12 months or less) and leases of low-value assets.\n\nAt the commencement date of the lease, the Company recognises lease liabilities measured at the present value of lease payments to be made over the lease term. Lease payments are discounted using the incremental borrowing rate (IBR) of ${inputs.roi}% per annum applicable at the commencement date.\n\nThe right-of-use asset is initially measured at cost, comprising the initial measurement of the lease liability, any initial direct costs incurred, and an estimate of costs to dismantle and restore the underlying asset. ROU assets are depreciated on a straight-line basis over the lease term.`);
+
+    // ── Section 2: Amounts Recognised in Financial Statements
+    dSec(ws8, '2. Amounts Recognised in Financial Statements');
+    // Balance Sheet table
+    const bsHdrCols = ['Item', ...fySummary.map(r => r.fy)];
+    dTableHdr(ws8, bsHdrCols);
+    dTableRow(ws8, ['ROU Asset (Net)', ...fySummary.map(r => Utils.round2(r.rouCloseBV))], 0);
+    dTableRow(ws8, ['Lease Liability – Non-Current', ...fySummary.map(r => Utils.round2(r.nonCurrentLiab))], 1);
+    dTableRow(ws8, ['Lease Liability – Current', ...fySummary.map(r => Utils.round2(r.currentLiab))], 2);
+    ws8.addRow([]);
+    // P&L table
+    const plLabelRow = ws8.addRow(['P&L Impact:']);
+    plLabelRow.getCell(1).font = { name: FONT, bold: true, size: 9, color: { argb: C.textMain } };
+    ws8.mergeCells(plLabelRow.number, 1, plLabelRow.number, 6);
+    dTableHdr(ws8, ['Item', ...fySummary.map(r => r.fy)]);
+    dTableRow(ws8, ['Interest on Lease Liability', ...fySummary.map(r => Utils.round2(r.interest))], 0);
+    dTableRow(ws8, ['Depreciation of ROU Asset', ...fySummary.map(r => Utils.round2(r.dep))], 1);
+    dTableRow(ws8, ['Total P&L Impact', ...fySummary.map(r => Utils.round2(r.interest + r.dep))], 2);
+    ws8.addRow([]);
+
+    // ── Section 3: Maturity Analysis (Para 58(b))
+    dSec(ws8, '3. Maturity Analysis – Undiscounted Lease Payments (Para 58(b))');
+    dTableHdr(ws8, ['Maturity Band', 'Undiscounted Payments (₹)']);
+    const refDate = new Date();
+    const matBands = [
+      { label: 'Less than 1 year',  min: 0,  max: 12,       amount: 0 },
+      { label: '1 – 2 years',       min: 12, max: 24,       amount: 0 },
+      { label: '2 – 3 years',       min: 24, max: 36,       amount: 0 },
+      { label: '3 – 5 years',       min: 36, max: 60,       amount: 0 },
+      { label: 'More than 5 years', min: 60, max: Infinity, amount: 0 },
+    ];
+    amortRows.forEach(row => {
+      const mo = Utils.monthsBetween(refDate, row.date);
+      matBands.forEach(b => { if (mo >= b.min && mo < b.max) b.amount += row.payment; });
+    });
+    matBands.filter(b => b.amount > 0).forEach((b, idx) => {
+      dTableRow(ws8, [b.label, Utils.round2(b.amount)], idx);
+    });
+    ws8.addRow([]);
+
+    // ── Section 4: Key Assumptions
+    dSec(ws8, '4. Key Assumptions & Judgements (Para 52)');
+    const assumptions = [
+      ['Lease Asset', inputs.leaseName || 'Not specified'],
+      ['Lease Commencement', Utils.fmtDate(inputs.startDate)],
+      ['Lease Expiry', Utils.fmtDate(inputs.endDate)],
+      ['Lease Term', inputs.leaseTerm + ' months'],
+      ['Periodic Payment', Utils.fmtNum(inputs.paymentAmount) + ' (' + Utils.freqLabel[inputs.frequency] + ')'],
+      ['Incremental Borrowing Rate', inputs.roi + '% per annum'],
+      ['Initial Lease Liability (PV)', Utils.fmtNum(pvResult.totalPV)],
+      ['ROU Asset (at cost)', Utils.fmtNum(inputs.rouInitial)],
+      ['Total Cash Outflow (Para 53(a))', Utils.fmtNum(inputs.totalPayments)],
+      ['Total Finance Cost', Utils.fmtNum(inputs.totalInterest)],
+      ['Depreciation Method', 'Straight-line over lease term'],
+    ];
+    dTableHdr(ws8, ['Parameter', 'Value']);
+    assumptions.forEach(([k, v], idx) => { dTableRow(ws8, [k, v], idx); });
+    ws8.addRow([]);
+
+    // ── Section 5: Additional Mandatory Disclosures (Para 53-60)
+    dSec(ws8, '5. Additional Mandatory Disclosures (Para 53–60)');
+    // 5(a) FY-wise expense table
+    const disc5aLabelRow = ws8.addRow(['5(a) Financial Year-wise Lease Expense Summary (Para 58(a)):']);
+    disc5aLabelRow.getCell(1).font = { name: FONT, bold: true, size: 9, color: { argb: C.textMain } };
+    ws8.mergeCells(disc5aLabelRow.number, 1, disc5aLabelRow.number, 6);
+    dTableHdr(ws8, ['Financial Year', 'Interest Expense (₹)', 'Depreciation (₹)', 'Total Cash Outflow (₹)']);
+    fySummary.forEach((r, idx) => dTableRow(ws8, [r.fy, Utils.round2(r.interest), Utils.round2(r.dep), Utils.round2(r.payments)], idx));
+    ws8.addRow([]);
+    // 5(b)-(g) Qualitative disclosures
+    const qualDisc = [
+      ['5(b) Short-term Lease Expense (Para 53(b)):', 'The Company does not have any leases with a lease term of 12 months or less that are accounted for under the short-term lease exemption. Accordingly, no short-term lease expense is recognised during the period. (Nil)'],
+      ['5(c) Low-value Asset Lease Expense (Para 53(c)):', 'The Company does not have any leases of low-value assets that are accounted for under the low-value exemption. (Nil)'],
+      ['5(d) Variable Lease Payments Not Included in Lease Liability (Para 53(d)):', 'There are no variable lease payments that do not depend on an index or rate and that are not included in the measurement of the lease liability. (Nil)'],
+      ['5(e) Income from Sub-leasing (Para 53(e)):', 'The Company has not sub-leased any right-of-use assets during the period. (Nil)'],
+      ['5(f) Future Cash Outflows Not Reflected in Lease Liability (Para 59):', 'The lease does not contain extension options, termination options, or residual value guarantees beyond those already included in the measurement of the lease liability. There are no potential cash outflows to which the lessee is exposed that are not already reflected in the lease liability recognised above.'],
+      ['5(g) Managing Liquidity Risk from Leases (Para 60):', 'The Company manages its liquidity risk arising from lease obligations by maintaining adequate cash reserves and committed credit facilities. The maturity profile of undiscounted lease obligations is disclosed in Section 3 above.'],
+    ];
+    qualDisc.forEach(([heading, body], idx) => {
+      const hr = ws8.addRow([heading]);
+      hr.height = 20;
+      const hc = hr.getCell(1);
+      hc.font = { name: FONT, bold: true, size: 9, color: { argb: C.navyFg } };
+      hc.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C.tealBg } };
+      hc.alignment = { vertical: 'middle', horizontal: 'left' };
+      ws8.mergeCells(hr.number, 1, hr.number, 6);
+      dText(ws8, body);
+    });
+
+    /* ── 9. DISCLAIMER SHEET ───────────────────── */
     const wsD = wb.addWorksheet('Disclaimer', { tabColor: { argb: 'FF7B341E' } });
     wsD.columns = [{ width: 110 }];
 
@@ -594,6 +734,89 @@ const Export = (() => {
     y = addPage('Journal Entries');
     const jb = []; fyJournals.forEach(({ fy, entries }) => entries.forEach(entry => entry.lines.forEach(line => jb.push([fy, entry.label, line.account, line.dr ? Utils.fmtNum(line.dr) : '', line.cr ? Utils.fmtNum(line.cr) : '']))));
     doc.autoTable({ startY: y, theme: 'grid', head: [['FY', 'Entry', 'Account', 'Dr (₹)', 'Cr (₹)']], body: jb, ..._pdfTableStyle(DARK, ACCENT) });
+
+    // ── Disclosure Notes Page ──
+    doc.addPage();
+    doc.setFillColor(240, 249, 255); doc.rect(0, 0, PAGE_W, doc.internal.pageSize.getHeight(), 'F');
+    doc.setFillColor(...DARK); doc.rect(0, 0, PAGE_W, 22, 'F');
+    doc.setTextColor(...ACCENT); doc.setFontSize(12); doc.setFont('helvetica', 'bold');
+    doc.text('Disclosure Notes – Ind AS 116 (Para 52–60)', 10, 14);
+    doc.setTextColor(150, 160, 190); doc.setFontSize(8); doc.setFont('helvetica', 'normal');
+    doc.text(leaseName || '', PAGE_W - 10, 14, { align: 'right' });
+
+    let discY = 28;
+    const discSec = (title) => {
+      doc.setFillColor(2, 132, 199); doc.rect(10, discY, PAGE_W - 20, 7, 'F');
+      doc.setTextColor(255, 255, 255); doc.setFontSize(9); doc.setFont('helvetica', 'bold');
+      doc.text(title, 13, discY + 5); discY += 9;
+    };
+    const discBody = (text) => {
+      doc.setFillColor(240, 249, 255); doc.rect(10, discY, PAGE_W - 20, 14, 'F');
+      doc.setTextColor(51, 65, 85); doc.setFontSize(7); doc.setFont('helvetica', 'normal');
+      doc.text(text, 13, discY + 4, { maxWidth: PAGE_W - 26 }); discY += 16;
+    };
+
+    discSec('1. Accounting Policy – Leases (Ind AS 116)');
+    discBody(`The Company recognises a right-of-use (ROU) asset and a corresponding lease liability at the commencement date. Lease liabilities are measured at the present value of lease payments discounted at the IBR of ${inputs.roi}% p.a. ROU assets are depreciated on a straight-line basis over the lease term.`);
+
+    discSec('2. Amounts Recognised in Financial Statements');
+    const bsHead2 = [['Item', ...fySummary.map(r => r.fy)]];
+    const bsBody2 = [
+      ['ROU Asset (Net)', ...fySummary.map(r => Utils.fmtNum(r.rouCloseBV))],
+      ['Lease Liability – Non-Current', ...fySummary.map(r => Utils.fmtNum(r.nonCurrentLiab))],
+      ['Lease Liability – Current', ...fySummary.map(r => Utils.fmtNum(r.currentLiab))],
+      ['Interest Expense', ...fySummary.map(r => Utils.fmtNum(r.interest))],
+      ['Depreciation of ROU Asset', ...fySummary.map(r => Utils.fmtNum(r.dep))],
+    ];
+    doc.autoTable({ startY: discY, theme: 'grid', head: bsHead2, body: bsBody2, ..._pdfTableStyle(DARK, ACCENT) });
+    discY = doc.lastAutoTable.finalY + 6;
+
+    discSec('3. Maturity Analysis – Undiscounted Lease Payments (Para 58(b))');
+    const refDt = new Date();
+    const pdfBands = [
+      { label: 'Less than 1 year',  min: 0,  max: 12,       amount: 0 },
+      { label: '1 – 2 years',       min: 12, max: 24,       amount: 0 },
+      { label: '2 – 3 years',       min: 24, max: 36,       amount: 0 },
+      { label: '3 – 5 years',       min: 36, max: 60,       amount: 0 },
+      { label: 'More than 5 years', min: 60, max: Infinity, amount: 0 },
+    ];
+    amortRows.forEach(row => { const mo = Utils.monthsBetween(refDt, row.date); pdfBands.forEach(b => { if (mo >= b.min && mo < b.max) b.amount += row.payment; }); });
+    doc.autoTable({ startY: discY, theme: 'grid', head: [['Maturity Band', 'Undiscounted Payments (₹)']], body: pdfBands.filter(b => b.amount > 0).map(b => [b.label, Utils.fmtNum(Utils.round2(b.amount))]), ..._pdfTableStyle(DARK, ACCENT) });
+    discY = doc.lastAutoTable.finalY + 6;
+
+    discSec('4. Key Assumptions & Judgements (Para 52)');
+    doc.autoTable({
+      startY: discY, theme: 'grid',
+      head: [['Parameter', 'Value']],
+      body: [
+        ['Lease Asset', inputs.leaseName || 'Not specified'],
+        ['Lease Commencement', Utils.fmtDate(inputs.startDate)],
+        ['Lease Expiry', Utils.fmtDate(inputs.endDate)],
+        ['Lease Term', inputs.leaseTerm + ' months'],
+        ['Periodic Payment', Utils.freqLabel[inputs.frequency] + ' @ ₹' + Utils.fmtNum(inputs.paymentAmount)],
+        ['IBR', inputs.roi + '% per annum'],
+        ['Initial Lease Liability (PV)', '₹' + Utils.fmtNum(pvResult.totalPV)],
+        ['ROU Asset (at cost)', '₹' + Utils.fmtNum(inputs.rouInitial)],
+        ['Total Cash Outflow (Para 53(a))', '₹' + Utils.fmtNum(inputs.totalPayments)],
+        ['Total Finance Cost', '₹' + Utils.fmtNum(inputs.totalInterest)],
+        ['Depreciation Method', 'Straight-line over lease term'],
+      ],
+      ..._pdfTableStyle(DARK, ACCENT)
+    });
+    discY = doc.lastAutoTable.finalY + 6;
+
+    if (discY > doc.internal.pageSize.getHeight() - 60) {
+      doc.addPage();
+      doc.setFillColor(240, 249, 255); doc.rect(0, 0, PAGE_W, doc.internal.pageSize.getHeight(), 'F');
+      discY = 15;
+    }
+    discSec('5. Additional Mandatory Disclosures (Para 53–60)');
+    discBody('5(b) Short-term Lease Expense (Para 53(b)): The Company does not have leases ≤12 months under the short-term exemption. (Nil)');
+    discBody('5(c) Low-value Asset Lease Expense (Para 53(c)): The Company does not have leases of low-value assets under the low-value exemption. (Nil)');
+    discBody('5(d) Variable Lease Payments Not in Lease Liability (Para 53(d)): No variable payments outside the measurement of the lease liability. (Nil)');
+    discBody('5(e) Income from Sub-leasing (Para 53(e)): The Company has not sub-leased any ROU assets during the period. (Nil)');
+    discBody('5(f) Future Cash Outflows Not in Lease Liability (Para 59): No extension options, termination options, or residual value guarantees beyond those included in the lease liability.');
+    discBody('5(g) Liquidity Risk from Leases (Para 60): The Company manages liquidity risk from lease obligations by maintaining adequate cash reserves. The maturity profile is disclosed in Section 3 above.');
     const safeName = (leaseName || 'Lease').replace(/[^a-zA-Z0-9_]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
     const fname = `IndAS116_${safeName}_Report.pdf`;
     const blob = doc.output('blob');
