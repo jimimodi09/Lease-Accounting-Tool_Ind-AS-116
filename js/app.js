@@ -16,7 +16,7 @@
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
       btn.classList.add('active');
       document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
-      if (btn.dataset.tab === 'portfolio') renderPortfolio();
+      if (btn.dataset.tab === 'portfolio') { renderPortfolio(); }
     });
   });
 
@@ -476,6 +476,42 @@
     switchTab('inputs');
   });
 
+  /* ── Export Portfolio JSON ── */
+  document.getElementById('exportPortfolioJsonBtn').addEventListener('click', () => {
+    Portfolio.exportJSON(_portfolio);
+    if (_portfolio.length > 0) {
+      _auditTrail.unshift({ ts: new Date().toLocaleString('en-IN'), summary: `Exported portfolio JSON (${_portfolio.length} lease${_portfolio.length > 1 ? 's' : ''})` });
+      renderPortfolio();
+    }
+  });
+
+  /* ── Import Portfolio JSON ── */
+  document.getElementById('importPortfolioJsonBtn').addEventListener('click', () => {
+    Portfolio.importJSON((importedLeases) => {
+      let added = 0, updated = 0;
+      importedLeases.forEach(imported => {
+        const idx = _portfolio.findIndex(l => l.label === imported.label);
+        if (idx >= 0) { _portfolio[idx] = imported; updated++; }
+        else           { _portfolio.push(imported); added++; }
+      });
+      _auditTrail.unshift({
+        ts: new Date().toLocaleString('en-IN'),
+        summary: `Imported portfolio JSON — ${added} added, ${updated} updated`
+      });
+      renderPortfolio();
+      alert(`Import complete: ${added} lease(s) added, ${updated} lease(s) updated.`);
+    });
+  });
+
+  /* ── Export Consolidated Excel ── */
+  document.getElementById('exportConsolidatedExcelBtn').addEventListener('click', () => {
+    Portfolio.exportConsolidatedExcel(_portfolio).catch(err => alert('Excel export failed: ' + err.message));
+    if (_portfolio.length > 0) {
+      _auditTrail.unshift({ ts: new Date().toLocaleString('en-IN'), summary: `Exported consolidated Excel (${_portfolio.length} lease${_portfolio.length > 1 ? 's' : ''})` });
+      renderPortfolio();
+    }
+  });
+
   function renderPortfolio() {
     const listDiv   = document.getElementById('portfolioList');
     const kpiDiv    = document.getElementById('portfolioKPIs');
@@ -510,6 +546,9 @@
     auditBody.innerHTML = _auditTrail.length
       ? _auditTrail.map(e=>`<tr><td style="font-family:var(--mono);font-size:11px;white-space:nowrap;text-align:left;">${e.ts}</td><td style="text-align:left;">${e.summary}</td></tr>`).join('')
       : '<tr><td colspan="2" style="color:var(--text-muted);">No actions recorded.</td></tr>';
+
+    // Render consolidated view
+    Portfolio.renderConsolidatedView(_portfolio);
   }
 
   window._portfolioLoad = (id) => {

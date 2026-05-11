@@ -561,18 +561,40 @@
     <section class="tab-panel" id="tab-portfolio">
       <div class="panel-header">
         <h2>Multi-Lease Portfolio</h2>
-        <p>Manage multiple leases. Save the current computation and switch between leases.</p>
+        <p>Manage multiple leases, consolidate portfolio-level figures, and export audit-ready reports.</p>
       </div>
+
+      <!-- Primary Actions -->
       <div class="portfolio-toolbar">
         <button class="btn-primary" id="saveLeaseBtn">💾 Save Current Lease</button>
         <button class="btn-secondary" id="newLeaseBtn">➕ New Lease</button>
       </div>
+
+      <!-- Portfolio list + legacy KPIs -->
       <div id="portfolioList"></div>
       <div class="section-title" style="margin-top:28px;">Portfolio Totals</div>
       <div class="kpi-grid" id="portfolioKPIs"></div>
 
+      <!-- Consolidation Actions -->
+      <div class="section-title" style="margin-top:32px;">🔗 Portfolio Consolidation</div>
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">Export all saved leases to JSON for backup or cross-device use. Import a previously exported portfolio. Generate a consolidated, multi-sheet Excel workbook with portfolio KPIs, FY-wise aggregated schedules, and individual lease amortisation tables.</p>
+      <div class="portfolio-toolbar" style="gap:10px;flex-wrap:wrap;">
+        <button class="btn-outline" id="exportPortfolioJsonBtn" title="Export all saved leases to a JSON file">
+          ⬇ Export Portfolio JSON
+        </button>
+        <button class="btn-outline" id="importPortfolioJsonBtn" title="Import leases from a previously exported JSON file">
+          ⬆ Import Portfolio JSON
+        </button>
+        <button class="btn-primary" id="exportConsolidatedExcelBtn" title="Export a consolidated multi-sheet Excel workbook">
+          📊 Export Consolidated Excel
+        </button>
+      </div>
+
+      <!-- Consolidated View -->
+      <div id="consolidatedView" style="margin-top:24px;"></div>
+
       <!-- Audit Trail -->
-      <div class="section-title" style="margin-top:28px;">🕵️ Audit Trail</div>
+      <div class="section-title" style="margin-top:32px;">🕵️ Audit Trail</div>
       <div class="table-wrapper">
         <table class="data-table" id="auditTable">
           <thead>
@@ -600,7 +622,8 @@
   <script src="js/template.js?v=4"></script>
   <script src="js/upload.js?v=4"></script>
   <script src="js/export.js?v=5"></script>
-  <script src="js/app.js?v=3"></script>
+  <script src="js/portfolio.js?v=1"></script>
+  <script src="js/app.js?v=4"></script>
   <script>
     // Initialise all flatpickr date pickers with DD-MM-YYYY format
     document.querySelectorAll('.date-picker').forEach(function(el) {
