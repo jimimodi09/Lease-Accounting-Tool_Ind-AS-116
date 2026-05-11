@@ -1,11 +1,11 @@
-/* ── portfolio.js – Portfolio Consolidation Module ── */
+﻿/* â”€â”€ portfolio.js â€“ Portfolio Consolidation Module â”€â”€ */
 'use strict';
 
 const Portfolio = (() => {
 
-  /* ─────────────────────────────────────────────────────
-     EXPORT JSON  –  Save entire portfolio to a .json file
-  ───────────────────────────────────────────────────── */
+  /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+     EXPORT JSON  â€“  Save entire portfolio to a .json file
+  â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
   const exportJSON = (portfolio) => {
     if (!portfolio || portfolio.length === 0) {
       alert('No leases in portfolio to export. Save at least one lease first.');
@@ -27,10 +27,10 @@ const Portfolio = (() => {
     URL.revokeObjectURL(url);
   };
 
-  /* ─────────────────────────────────────────────────────
-     IMPORT JSON  –  Load portfolio from a .json file
+  /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+     IMPORT JSON  â€“  Load portfolio from a .json file
      callback(leases) called with parsed array on success
-  ───────────────────────────────────────────────────── */
+  â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
   const importJSON = (callback) => {
     const input = document.createElement('input');
     input.type  = 'file';
@@ -69,9 +69,9 @@ const Portfolio = (() => {
     input.click();
   };
 
-  /* ─────────────────────────────────────────────────────
-     BUILD CONSOLIDATED  –  Aggregate all leases by FY
-  ───────────────────────────────────────────────────── */
+  /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+     BUILD CONSOLIDATED  â€“  Aggregate all leases by FY
+  â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
   const buildConsolidated = (portfolio) => {
     if (!portfolio || portfolio.length === 0) return null;
 
@@ -131,9 +131,9 @@ const Portfolio = (() => {
     };
   };
 
-  /* ─────────────────────────────────────────────────────
-     RENDER CONSOLIDATED VIEW  –  Populate #consolidatedView
-  ───────────────────────────────────────────────────── */
+  /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+     RENDER CONSOLIDATED VIEW  â€“  Populate #consolidatedView
+  â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
   const renderConsolidatedView = (portfolio) => {
     const container = document.getElementById('consolidatedView');
     if (!container) return;
@@ -189,10 +189,10 @@ const Portfolio = (() => {
       </tr>`).join('');
 
     container.innerHTML = `
-      <div class="section-title" style="margin-top:0;">📊 Consolidated Portfolio KPIs</div>
+      <div class="section-title" style="margin-top:0;">ðŸ“Š Consolidated Portfolio KPIs</div>
       <div class="kpi-grid">${kpiHtml}</div>
 
-      <div class="section-title" style="margin-top:28px;">📅 Consolidated FY-wise Summary (All Leases)</div>
+      <div class="section-title" style="margin-top:28px;">ðŸ“… Consolidated FY-wise Summary (All Leases)</div>
       <div class="table-wrapper">
         <table class="data-table" id="consolidatedFYTable">
           <thead>
@@ -223,7 +223,7 @@ const Portfolio = (() => {
         </table>
       </div>
 
-      <div class="section-title" style="margin-top:28px;">📋 Individual Lease Breakdown</div>
+      <div class="section-title" style="margin-top:28px;">ðŸ“‹ Individual Lease Breakdown</div>
       <div class="table-wrapper">
         <table class="data-table" id="leaseBreakdownTable">
           <thead>
@@ -239,9 +239,9 @@ const Portfolio = (() => {
       </div>`;
   };
 
-  /* ─────────────────────────────────────────────────────
-     EXPORT CONSOLIDATED EXCEL  –  Multi-sheet ExcelJS workbook
-  ───────────────────────────────────────────────────── */
+  /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+     EXPORT CONSOLIDATED EXCEL  â€“  Multi-sheet ExcelJS workbook
+  â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
   const exportConsolidatedExcel = async (portfolio) => {
     if (!portfolio || portfolio.length === 0) {
       alert('No leases in portfolio. Save at least one lease first.');
@@ -258,7 +258,7 @@ const Portfolio = (() => {
     wb.created    = new Date();
     wb.properties.date1904 = false;
 
-    // ── Color palette ──
+    // â”€â”€ Color palette â”€â”€
     const CLR = { header: '1E3A5F', subHeader: '2D6A9F', accent: '4F81BD', total: 'D6E4F0', white: 'FFFFFF', light: 'EBF5FB', border: 'B0C4DE' };
     const headerFill  = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + CLR.header } };
     const subFill     = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + CLR.subHeader } };
@@ -281,11 +281,11 @@ const Portfolio = (() => {
       });
     };
 
-    /* ── SHEET 1: Portfolio Summary ── */
+    /* â”€â”€ SHEET 1: Portfolio Summary â”€â”€ */
     const ws1 = wb.addWorksheet('Portfolio Summary', { views: [{ state: 'frozen', ySplit: 5 }] });
     ws1.mergeCells('A1:I1');
     const t1 = ws1.getCell('A1');
-    t1.value = 'Ind AS 116 – Consolidated Lease Portfolio Summary';
+    t1.value = 'Ind AS 116 â€“ Consolidated Lease Portfolio Summary';
     t1.font  = { name: 'Calibri', bold: true, size: 14, color: { argb: 'FF' + CLR.white } };
     t1.fill  = headerFill;
     t1.alignment = { horizontal: 'center', vertical: 'middle' };
@@ -321,7 +321,7 @@ const Portfolio = (() => {
     ws1.getRow(4).height = 22;
 
     // Individual lease table headers
-    const s1Headers = ['Lease Name','Start Date','End Date','Term (months)','IBR (%)','Lease Liability (PV) ₹','ROU Asset ₹','Total Interest ₹','Total Payments ₹'];
+    const s1Headers = ['Lease Name','Start Date','End Date','Term (months)','IBR (%)','Lease Liability (PV) â‚¹','ROU Asset â‚¹','Total Interest â‚¹','Total Payments â‚¹'];
     const s1Row = ws1.addRow(s1Headers);
     s1Row.height = 20;
     s1Row.eachCell((cell, i) => {
@@ -362,11 +362,11 @@ const Portfolio = (() => {
 
     ws1.columns = [{ width: 32 }, { width: 14 }, { width: 14 }, { width: 14 }, { width: 10 }, { width: 20 }, { width: 18 }, { width: 18 }, { width: 18 }];
 
-    /* ── SHEET 2: Consolidated FY Summary ── */
+    /* â”€â”€ SHEET 2: Consolidated FY Summary â”€â”€ */
     const ws2 = wb.addWorksheet('Consolidated FY Summary', { views: [{ state: 'frozen', ySplit: 3 }] });
     ws2.mergeCells('A1:I1');
     const t3 = ws2.getCell('A1');
-    t3.value = 'Ind AS 116 – Consolidated FY-wise Lease Summary (All Leases)';
+    t3.value = 'Ind AS 116 â€“ Consolidated FY-wise Lease Summary (All Leases)';
     t3.font  = { name: 'Calibri', bold: true, size: 13, color: { argb: 'FF' + CLR.white } };
     t3.fill  = headerFill; t3.alignment = { horizontal: 'center', vertical: 'middle' };
     ws2.getRow(1).height = 28;
@@ -376,7 +376,7 @@ const Portfolio = (() => {
     t4.value = `Aggregated across ${portfolio.length} lease(s)  |  Generated: ${new Date().toLocaleString('en-IN')}`;
     t4.font  = { name: 'Calibri', italic: true, size: 9 }; t4.fill = lightFill; t4.alignment = { horizontal: 'center' };
 
-    const s2Headers = ['Financial Year','Opening Liability ₹','Interest Accrued ₹','Payments ₹','Closing Liability ₹','Current Portion ₹','Non-Current Portion ₹','Depreciation ₹','ROU Book Value ₹'];
+    const s2Headers = ['Financial Year','Opening Liability â‚¹','Interest Accrued â‚¹','Payments â‚¹','Closing Liability â‚¹','Current Portion â‚¹','Non-Current Portion â‚¹','Depreciation â‚¹','ROU Book Value â‚¹'];
     const s2HRow = ws2.addRow(s2Headers);
     s2HRow.height = 20;
     s2HRow.eachCell((cell, i) => {
@@ -406,11 +406,11 @@ const Portfolio = (() => {
 
     ws2.columns = [{ width: 16 }, { width: 18 }, { width: 18 }, { width: 16 }, { width: 18 }, { width: 16 }, { width: 20 }, { width: 16 }, { width: 18 }];
 
-    /* ── SHEET 3: Consolidated Journal Entries ── */
+    /* â”€â”€ SHEET 3: Consolidated Journal Entries â”€â”€ */
     const wje = wb.addWorksheet('Consolidated Journal Entries', { views: [{ state: 'frozen', ySplit: 3 }] });
     wje.mergeCells('A1:G1');
     const tje = wje.getCell('A1');
-    tje.value = 'Ind AS 116 – Consolidated Journal Entries (All Leases, All FYs)';
+    tje.value = 'Ind AS 116 â€“ Consolidated Journal Entries (All Leases, All FYs)';
     tje.font  = { name: 'Calibri', bold: true, size: 13, color: { argb: 'FF' + CLR.white } };
     tje.fill  = headerFill; tje.alignment = { horizontal: 'center', vertical: 'middle' };
     wje.getRow(1).height = 28;
@@ -420,7 +420,7 @@ const Portfolio = (() => {
     tje2.value = `Aggregated across ${portfolio.length} lease(s)  |  Generated: ${new Date().toLocaleString('en-IN')}  |  Prepared by: CA Jimi R Modi`;
     tje2.font  = { name: 'Calibri', italic: true, size: 9 }; tje2.fill = lightFill; tje2.alignment = { horizontal: 'center' };
 
-    const jeHeaders = ['Financial Year', 'Lease Name', 'Journal Entry Type', 'Account / Particulars', 'Dr (₹)', 'Cr (₹)', 'Narration'];
+    const jeHeaders = ['Financial Year', 'Lease Name', 'Journal Entry Type', 'Account / Particulars', 'Dr (â‚¹)', 'Cr (â‚¹)', 'Narration'];
     const jeHRow = wje.addRow(jeHeaders);
     jeHRow.height = 20;
     jeHRow.eachCell((cell, ci) => {
@@ -493,14 +493,14 @@ const Portfolio = (() => {
       { width: 38 }, { width: 16 }, { width: 16 }, { width: 40 }
     ];
 
-    /* ── SHEETS 4+: Per-Lease Amortisation ── */
+    /* â”€â”€ SHEETS 4+: Per-Lease Amortisation â”€â”€ */
     portfolio.forEach((l) => {
       const safeName = (l.label || 'Lease').replace(/[:\\/?*\[\]]/g, '').substring(0, 25) + ' Amort';
       const wsl = wb.addWorksheet(safeName, { views: [{ state: 'frozen', ySplit: 3 }] });
 
       wsl.mergeCells('A1:I1');
       const tl = wsl.getCell('A1');
-      tl.value = `${l.label} – Lease Liability Amortisation Schedule`;
+      tl.value = `${l.label} â€“ Lease Liability Amortisation Schedule`;
       tl.font  = { name: 'Calibri', bold: true, size: 12, color: { argb: 'FF' + CLR.white } };
       tl.fill  = subFill; tl.alignment = { horizontal: 'center', vertical: 'middle' };
       wsl.getRow(1).height = 26;
@@ -508,10 +508,10 @@ const Portfolio = (() => {
       wsl.mergeCells('A2:I2');
       const tl2 = wsl.getCell('A2');
       const s = l.state;
-      tl2.value = `IBR: ${s.inputs.roi}%  |  Term: ${s.inputs.leaseTerm}m  |  PV: ₹${Utils.fmtNum(s.pvResult.totalPV)}  |  ROU: ₹${Utils.fmtNum(s.inputs.rouInitial)}`;
+      tl2.value = `IBR: ${s.inputs.roi}%  |  Term: ${s.inputs.leaseTerm}m  |  PV: â‚¹${Utils.fmtNum(s.pvResult.totalPV)}  |  ROU: â‚¹${Utils.fmtNum(s.inputs.rouInitial)}`;
       tl2.font  = { name: 'Calibri', italic: true, size: 9 }; tl2.fill = lightFill; tl2.alignment = { horizontal: 'center' };
 
-      const slHeaders = ['#', 'Date', 'FY', 'Months', 'Rate (%)', 'Opening Balance ₹', 'Interest ₹', 'Payment ₹', 'Closing Balance ₹'];
+      const slHeaders = ['#', 'Date', 'FY', 'Months', 'Rate (%)', 'Opening Balance â‚¹', 'Interest â‚¹', 'Payment â‚¹', 'Closing Balance â‚¹'];
       const slHRow = wsl.addRow(slHeaders);
       slHRow.height = 20;
       slHRow.eachCell((cell) => {
@@ -534,7 +534,7 @@ const Portfolio = (() => {
       wsl.columns = [{ width: 6 }, { width: 14 }, { width: 12 }, { width: 8 }, { width: 8 }, { width: 18 }, { width: 16 }, { width: 16 }, { width: 18 }];
     });
 
-    /* ── SHEETS: Per-Lease Journal Entries ── */
+    /* â”€â”€ SHEETS: Per-Lease Journal Entries â”€â”€ */
 
     // jeRefMap: track Total row cell refs for formula-linked summary sheets
     const jeRefMap = [];
@@ -546,7 +546,7 @@ const Portfolio = (() => {
 
       wsje.mergeCells('A1:F1');
       const tjel = wsje.getCell('A1');
-      tjel.value = `${l.label} – Journal Entries (Ind AS 116)`;
+      tjel.value = `${l.label} â€“ Journal Entries (Ind AS 116)`;
       tjel.font  = { name: 'Calibri', bold: true, size: 12, color: { argb: 'FF' + CLR.white } };
       tjel.fill  = subFill; tjel.alignment = { horizontal: 'center', vertical: 'middle' };
       wsje.getRow(1).height = 26;
@@ -556,7 +556,7 @@ const Portfolio = (() => {
       tje2l.value = `Prepared by: CA Jimi R Modi  |  Generated: ${new Date().toLocaleString('en-IN')}`;
       tje2l.font  = { name: 'Calibri', italic: true, size: 9 }; tje2l.fill = lightFill; tje2l.alignment = { horizontal: 'center' };
 
-      const jeHdrs = ['Financial Year', 'Journal Entry Type', 'Account / Particulars', 'Dr (₹)', 'Cr (₹)', 'Narration'];
+      const jeHdrs = ['Financial Year', 'Journal Entry Type', 'Account / Particulars', 'Dr (â‚¹)', 'Cr (â‚¹)', 'Narration'];
       const jeHR   = wsje.addRow(jeHdrs);
       jeHR.height  = 20;
       jeHR.eachCell((cell, ci) => {
@@ -619,133 +619,245 @@ const Portfolio = (() => {
     });
 
     
-    /* -- Shared layout for formula-linked summary sheets -- */
+    /* â”€â”€ Shared helpers for traditional ledger-style summary sheets â”€â”€ */
     const allFYs2 = [...new Set(portfolio.flatMap(l => (l.state.fyJournals||[]).map(f=>f.fy)))].sort();
     const JE_TYPES = ['Initial Recognition','Interest Accrual','Lease Payment','Depreciation of ROU Asset'];
-    const EMOJIS2  = { 'Initial Recognition':'ðŸ“‹','Interest Accrual':'ðŸ’¸','Lease Payment':'ðŸ¦','Depreciation of ROU Asset':'ðŸ“‰' };
-    const nL2 = portfolio.length;
-    const totDrCol2 = 2 + nL2*2 + 1;
-    const totCrCol2 = totDrCol2 + 1;
-    const totalCols3 = totCrCol2;
-    const sumCW = [{ width: 34 }];
-    portfolio.forEach(() => { sumCW.push({ width: 20 }, { width: 20 }); });
-    sumCW.push({ width: 20 }, { width: 20 });
-    const summHdrVals = ['Financial Year / Entry Type'];
-    portfolio.forEach(l => { summHdrVals.push(l.label + ' Dr (Rs)', l.label + ' Cr (Rs)'); });
-    summHdrVals.push('Total Dr (Rs)', 'Total Cr (Rs)');
 
-    /* -- SHEET: JE by Year -- */
+    // 5-column layout: A=FY, B=Lease, C=Account/Particulars, D=Dr, E=Cr
+    const ledgerCols = [{ width: 14 }, { width: 28 }, { width: 42 }, { width: 18 }, { width: 18 }];
+    const ledgerHdr  = ['Financial Year', 'Lease / Entity', 'Account / Particulars', 'Dr (â‚¹)', 'Cr (â‚¹)'];
+
+    // Get the Dr/Cr account line structure for an entry type from in-memory data
+    // Returns [{account, isDr, isCr}] using first matching lease
+    const getLineStructure = (jeType) => {
+      for (const l of portfolio) {
+        for (const fyBlock of (l.state.fyJournals||[])) {
+          const entry = fyBlock.entries.find(e => e.label === jeType);
+          if (entry) return entry.lines.map(ln => ({ account: ln.account, isDr: ln.dr != null, isCr: ln.cr != null }));
+        }
+      }
+      return [];
+    };
+
+    // Helper: style a ledger data row
+    const styleRow = (ws, row, isDrLine, isTotal, isFYHead, rowNum) => {
+      row.eachCell((cell, ci) => {
+        cell.border = border;
+        if (isFYHead) {
+          cell.fill = { type:'pattern',pattern:'solid',fgColor:{argb:'FFEBF5FB'} };
+          cell.font = { name:'Calibri',bold:true,size:10,color:{argb:'FF1E3A5F'} };
+          cell.alignment = { horizontal:'left',vertical:'middle' };
+        } else if (isTotal) {
+          cell.fill = totalFill; cell.font = boldFont;
+          cell.alignment = { horizontal: ci <= 3 ? 'left' : 'right', vertical:'middle' };
+          if (ci >= 4) cell.numFmt = numFmt;
+        } else {
+          cell.fill = { type:'pattern',pattern:'solid',fgColor:{argb: isDrLine?'FFF0F8FF':'FFFFF0F0'} };
+          cell.font = normFont;
+          cell.alignment = { horizontal: ci <= 3 ? 'left' : 'right', vertical:'middle' };
+          if (ci >= 4) cell.numFmt = numFmt;
+        }
+      });
+    };
+
+    // Write the ledger block for one (jeType, fy) combination into worksheet ws at current row
+    // Returns number of rows written
+    const writeLedgerBlock = (ws, jeType, fy, curRow) => {
+      const lineStruct = getLineStructure(jeType);
+      if (!lineStruct.length) return 0;
+      let written = 0;
+
+      // FY subheader
+      ws.mergeCells(curRow+written, 1, curRow+written, 5);
+      const fyHead = ws.getCell(curRow+written, 1);
+      fyHead.value = '  ' + fy; fyHead.fill = { type:'pattern',pattern:'solid',fgColor:{argb:'FFEBF5FB'} };
+      fyHead.font  = { name:'Calibri',bold:true,size:10,color:{argb:'FF1E3A5F'} };
+      fyHead.border = border; fyHead.alignment = { horizontal:'left',vertical:'middle' };
+      ws.getRow(curRow+written).height = 16; written++;
+
+      // Dr lines (all leases)
+      const drLines = lineStruct.filter(l => l.isDr);
+      const crLines = lineStruct.filter(l => l.isCr);
+      const drSumCells = [], crSumCells = [];
+
+      drLines.forEach(lineDef => {
+        jeRefMap.forEach((lr, li) => {
+          const ref = lr.fyMap[fy] && lr.fyMap[fy][jeType];
+          if (!ref) return;
+          const sn = ref.sheet.replace(/'/g, "''");
+          // For multi-line entries the total ref points to the sum; for single-line use directly
+          const drRow = ws.addRow([
+            fy, lr.label, lineDef.account,
+            { formula: "'" + sn + "'!" + ref.drCell }, ''
+          ]);
+          drRow.height = 16; written++;
+          drRow.eachCell((cell, ci) => {
+            cell.border = border;
+            cell.fill = { type:'pattern',pattern:'solid',fgColor:{argb:'FFF0F8FF'} };
+            cell.font = normFont;
+            cell.alignment = { horizontal: ci<=3 ? 'left' : 'right', vertical:'middle' };
+            if (ci>=4) cell.numFmt = numFmt;
+          });
+          drSumCells.push('D' + (curRow + written - 1));
+        });
+      });
+
+      // Cr lines (all leases, indented with â†³)
+      crLines.forEach(lineDef => {
+        jeRefMap.forEach((lr, li) => {
+          const ref = lr.fyMap[fy] && lr.fyMap[fy][jeType];
+          if (!ref) return;
+          const sn = ref.sheet.replace(/'/g, "''");
+          const crRow = ws.addRow([
+            fy, lr.label, '    â†³ ' + lineDef.account,
+            '', { formula: "'" + sn + "'!" + ref.crCell }
+          ]);
+          crRow.height = 16; written++;
+          crRow.eachCell((cell, ci) => {
+            cell.border = border;
+            cell.fill = { type:'pattern',pattern:'solid',fgColor:{argb:'FFFFF0F0'} };
+            cell.font = normFont;
+            cell.alignment = { horizontal: ci<=3 ? 'left' : 'right', vertical:'middle' };
+            if (ci>=4) cell.numFmt = numFmt;
+          });
+          crSumCells.push('E' + (curRow + written - 1));
+        });
+      });
+
+      // Consolidated total row
+      const totRow = ws.addRow([
+        fy + ' Consolidated Total', '', '',
+        drSumCells.length ? { formula: drSumCells.join('+') } : 0,
+        crSumCells.length ? { formula: crSumCells.join('+') } : 0
+      ]);
+      totRow.height = 18; written++;
+      totRow.eachCell((cell, ci) => {
+        cell.fill = totalFill; cell.font = boldFont; cell.border = border;
+        cell.alignment = { horizontal: ci<=3 ? 'left' : 'right', vertical:'middle' };
+        if (ci>=4) cell.numFmt = numFmt;
+      });
+      ws.addRow([]); written++; // spacer
+      return written;
+    };
+
+    /* â”€â”€ SHEET: JE by Year (traditional ledger, Dr blue / Cr pink) â”€â”€ */
     const wsByFY = wb.addWorksheet('JE by Year', { views: [{ state: 'frozen', ySplit: 3 }] });
-    wsByFY.mergeCells(1,1,1,totalCols3);
-    const fytT = wsByFY.getCell('A1');
-    fytT.value = 'Ind AS 116 - Consolidated JE by Financial Year (Formula-Linked)';
-    fytT.font = { name:'Calibri',bold:true,size:13,color:{argb:'FF'+CLR.white} };
-    fytT.fill = headerFill; fytT.alignment = { horizontal:'center',vertical:'middle' };
+    wsByFY.mergeCells('A1:E1');
+    const fytT2 = wsByFY.getCell('A1');
+    fytT2.value = 'Ind AS 116 â€“ Consolidated Journal Entries by Financial Year';
+    fytT2.font  = { name:'Calibri',bold:true,size:13,color:{argb:'FF'+CLR.white} };
+    fytT2.fill  = headerFill; fytT2.alignment = { horizontal:'center',vertical:'middle' };
     wsByFY.getRow(1).height = 28;
-    wsByFY.mergeCells(2,1,2,totalCols3);
-    const fytS = wsByFY.getCell('A2');
-    fytS.value = 'Amounts linked via formula to individual lease JE sheets | ' + portfolio.length + ' lease(s)';
-    fytS.font = { name:'Calibri',italic:true,size:9 }; fytS.fill = lightFill; fytS.alignment = { horizontal:'center' };
-    const fytHR = wsByFY.addRow(summHdrVals); fytHR.height = 22;
-    fytHR.eachCell(cell => { cell.fill=headerFill; cell.font=hFont; cell.border=border; cell.alignment={horizontal:'center',vertical:'middle',wrapText:true}; });
-    let fyR2 = 4;
+    wsByFY.mergeCells('A2:E2');
+    const fytS2 = wsByFY.getCell('A2');
+    fytS2.value = 'Blue rows = Debit entries  |  Pink rows = Credit entries  |  Amounts formula-linked to individual lease JE sheets  |  ' + portfolio.length + ' lease(s)';
+    fytS2.font = { name:'Calibri',italic:true,size:9 }; fytS2.fill = lightFill; fytS2.alignment = { horizontal:'center' };
+    const fyHR2 = wsByFY.addRow(ledgerHdr); fyHR2.height = 22;
+    fyHR2.eachCell(cell => { cell.fill=headerFill; cell.font=hFont; cell.border=border; cell.alignment={horizontal:'center',vertical:'middle',wrapText:true}; });
+    let fyLedgerRow = 4;
 
     allFYs2.forEach(fy => {
-      wsByFY.mergeCells(fyR2,1,fyR2,totalCols3);
-      const fyH = wsByFY.getCell(fyR2,1);
-      fyH.value = '  ' + fy; fyH.fill = { type:'pattern',pattern:'solid',fgColor:{argb:'FF'+CLR.subHeader} };
-      fyH.font = { name:'Calibri',bold:true,size:11,color:{argb:'FFFFFFFF'} }; fyH.border = border; fyH.alignment = { horizontal:'left',vertical:'middle' };
-      wsByFY.getRow(fyR2).height = 20; fyR2++;
+      // FY section heading
+      wsByFY.mergeCells(fyLedgerRow, 1, fyLedgerRow, 5);
+      const fySecHead = wsByFY.getCell(fyLedgerRow, 1);
+      fySecHead.value = 'ðŸ“… ' + fy;
+      fySecHead.fill  = { type:'pattern',pattern:'solid',fgColor:{argb:'FF'+CLR.subHeader} };
+      fySecHead.font  = { name:'Calibri',bold:true,size:11,color:{argb:'FFFFFFFF'} };
+      fySecHead.border = border; fySecHead.alignment = { horizontal:'left',vertical:'middle' };
+      wsByFY.getRow(fyLedgerRow).height = 20; fyLedgerRow++;
 
-      JE_TYPES.forEach((jeType,ji) => {
+      JE_TYPES.forEach(jeType => {
         const hasAny = jeRefMap.some(lr => lr.fyMap[fy] && lr.fyMap[fy][jeType]);
         if (!hasAny) return;
-        const rFill = { type:'pattern',pattern:'solid',fgColor:{argb: ji%2===0?'FFF5F9FF':'FFFFFFFF'} };
-        const vals = [jeType]; const drc=[]; const crc=[];
-        jeRefMap.forEach((lr,li) => {
-          const ref = lr.fyMap[fy] && lr.fyMap[fy][jeType];
-          const dc = 2+li*2; const cc = dc+1;
-          if (ref) {
-            const sn = ref.sheet.replace(/'/g,"''");
-            vals.push({ formula:"'"+sn+"'!"+ref.drCell }, { formula:"'"+sn+"'!"+ref.crCell });
-            drc.push(colLtr(dc)+fyR2); crc.push(colLtr(cc)+fyR2);
-          } else { vals.push(0,0); }
-        });
-        vals.push(drc.length ? { formula:drc.join('+') } : 0, crc.length ? { formula:crc.join('+') } : 0);
-        const dr = wsByFY.addRow(vals); dr.height = 18;
-        dr.eachCell((cell,ci) => { cell.fill=rFill; cell.font=normFont; cell.border=border; if(ci===1) cell.alignment={horizontal:'left',vertical:'middle'}; else { cell.numFmt=numFmt; cell.alignment={horizontal:'right',vertical:'middle'}; } });
-        [totDrCol2,totCrCol2].forEach(tc => { const tc2=wsByFY.getCell(fyR2,tc); tc2.font=boldFont; tc2.fill=totalFill; });
-        fyR2++;
-      });
-      fyR2++;
-    });
-    wsByFY.columns = sumCW;
 
-    /* -- SHEET: JE by Type -- */
+        // Entry type sub-heading
+        wsByFY.mergeCells(fyLedgerRow, 1, fyLedgerRow, 5);
+        const jtSubHead = wsByFY.getCell(fyLedgerRow, 1);
+        jtSubHead.value = '  ' + jeType;
+        jtSubHead.fill  = { type:'pattern',pattern:'solid',fgColor:{argb:'FFD6E4F0'} };
+        jtSubHead.font  = { name:'Calibri',bold:true,size:10,color:{argb:'FF1E3A5F'} };
+        jtSubHead.border = border; jtSubHead.alignment = { horizontal:'left',vertical:'middle' };
+        wsByFY.getRow(fyLedgerRow).height = 16; fyLedgerRow++;
+
+        const written = writeLedgerBlock(wsByFY, jeType, fy, fyLedgerRow);
+        fyLedgerRow += written;
+      });
+    });
+    wsByFY.columns = ledgerCols;
+
+    /* â”€â”€ SHEET: JE by Type (e.g. all Depreciation across all leases + all FYs) â”€â”€ */
     const wsByType = wb.addWorksheet('JE by Type', { views: [{ state: 'frozen', ySplit: 3 }] });
-    wsByType.mergeCells(1,1,1,totalCols3);
-    const jttT = wsByType.getCell('A1');
-    jttT.value = 'Ind AS 116 - Consolidated JE by Entry Type (Formula-Linked)';
-    jttT.font = { name:'Calibri',bold:true,size:13,color:{argb:'FF'+CLR.white} };
-    jttT.fill = headerFill; jttT.alignment = { horizontal:'center',vertical:'middle' };
+    wsByType.mergeCells('A1:E1');
+    const jttT2 = wsByType.getCell('A1');
+    jttT2.value = 'Ind AS 116 â€“ Consolidated Journal Entries by Entry Type';
+    jttT2.font  = { name:'Calibri',bold:true,size:13,color:{argb:'FF'+CLR.white} };
+    jttT2.fill  = headerFill; jttT2.alignment = { horizontal:'center',vertical:'middle' };
     wsByType.getRow(1).height = 28;
-    wsByType.mergeCells(2,1,2,totalCols3);
-    const jttS = wsByType.getCell('A2');
-    jttS.value = 'e.g. Depreciation = ' + portfolio.map(l=>l.label).join(' + ') + ' | Amounts formula-linked';
-    jttS.font = { name:'Calibri',italic:true,size:9 }; jttS.fill = lightFill; jttS.alignment = { horizontal:'center' };
-    let jtR2 = 3;
+    wsByType.mergeCells('A2:E2');
+    const jttS2 = wsByType.getCell('A2');
+    jttS2.value = 'e.g. Depreciation section = ' + portfolio.map(l=>l.label).join(' + ') + '  |  Blue = Debit  |  Pink = Credit';
+    jttS2.font = { name:'Calibri',italic:true,size:9 }; jttS2.fill = lightFill; jttS2.alignment = { horizontal:'center' };
+    const jttHR2 = wsByType.addRow(ledgerHdr); jttHR2.height = 22;
+    jttHR2.eachCell(cell => { cell.fill=headerFill; cell.font=hFont; cell.border=border; cell.alignment={horizontal:'center',vertical:'middle',wrapText:true}; });
+    let jtLedgerRow = 4;
 
     JE_TYPES.forEach(jeType => {
-      wsByType.mergeCells(jtR2,1,jtR2,totalCols3);
-      const jtH = wsByType.getCell(jtR2,1);
-      jtH.value = (EMOJIS2[jeType]||'') + '  ' + jeType;
-      jtH.fill = { type:'pattern',pattern:'solid',fgColor:{argb:'FF'+CLR.subHeader} };
-      jtH.font = { name:'Calibri',bold:true,size:11,color:{argb:'FFFFFFFF'} }; jtH.border=border; jtH.alignment={horizontal:'left',vertical:'middle'};
-      wsByType.getRow(jtR2).height = 22; jtR2++;
+      const hasAnyType = allFYs2.some(fy => jeRefMap.some(lr => lr.fyMap[fy] && lr.fyMap[fy][jeType]));
+      if (!hasAnyType) return;
 
-      const jtHR2 = wsByType.addRow(summHdrVals); jtHR2.height = 20;
-      jtHR2.eachCell(cell => { cell.fill=headerFill; cell.font=hFont; cell.border=border; cell.alignment={horizontal:'center',vertical:'middle',wrapText:true}; });
-      jtR2++;
+      // Entry type section heading
+      wsByType.mergeCells(jtLedgerRow, 1, jtLedgerRow, 5);
+      const jtSecHead = wsByType.getCell(jtLedgerRow, 1);
+      const EMOJI3 = { 'Initial Recognition':'ðŸ“‹','Interest Accrual':'ðŸ’¸','Lease Payment':'ðŸ¦','Depreciation of ROU Asset':'ðŸ“‰' };
+      jtSecHead.value = (EMOJI3[jeType]||'') + '  ' + jeType;
+      jtSecHead.fill  = { type:'pattern',pattern:'solid',fgColor:{argb:'FF'+CLR.subHeader} };
+      jtSecHead.font  = { name:'Calibri',bold:true,size:11,color:{argb:'FFFFFFFF'} };
+      jtSecHead.border = border; jtSecHead.alignment = { horizontal:'left',vertical:'middle' };
+      wsByType.getRow(jtLedgerRow).height = 22; jtLedgerRow++;
 
-      const firstDR = jtR2;
-      allFYs2.forEach((fy,fi) => {
-        const rFill = { type:'pattern',pattern:'solid',fgColor:{argb: fi%2===0?'FFF5F9FF':'FFFFFFFF'} };
-        const vals = [fy]; const drc=[]; const crc=[];
-        jeRefMap.forEach((lr,li) => {
-          const ref = lr.fyMap[fy] && lr.fyMap[fy][jeType];
-          const dc = 2+li*2; const cc = dc+1;
-          if (ref) {
-            const sn = ref.sheet.replace(/'/g,"''");
-            vals.push({ formula:"'"+sn+"'!"+ref.drCell }, { formula:"'"+sn+"'!"+ref.crCell });
-            drc.push(colLtr(dc)+jtR2); crc.push(colLtr(cc)+jtR2);
-          } else { vals.push(0,0); }
-        });
-        vals.push(drc.length ? { formula:drc.join('+') } : 0, crc.length ? { formula:crc.join('+') } : 0);
-        const dr = wsByType.addRow(vals); dr.height = 17;
-        dr.eachCell((cell,ci) => { cell.fill=rFill; cell.font=normFont; cell.border=border; if(ci===1) cell.alignment={horizontal:'left',vertical:'middle'}; else { cell.numFmt=numFmt; cell.alignment={horizontal:'right',vertical:'middle'}; } });
-        [totDrCol2,totCrCol2].forEach(tc => { const tc2=wsByType.getCell(jtR2,tc); tc2.font=boldFont; tc2.fill=totalFill; });
-        jtR2++;
+      // Column headers
+      const jtHR3 = wsByType.addRow(ledgerHdr); jtHR3.height = 18;
+      jtHR3.eachCell(cell => { cell.fill=subFill; cell.font=hFont; cell.border=border; cell.alignment={horizontal:'center',vertical:'middle',wrapText:true}; });
+      jtLedgerRow++;
+
+      // One ledger block per FY
+      const grandDrCells = [], grandCrCells = [];
+      allFYs2.forEach(fy => {
+        const hasAny = jeRefMap.some(lr => lr.fyMap[fy] && lr.fyMap[fy][jeType]);
+        if (!hasAny) return;
+        const written = writeLedgerBlock(wsByType, jeType, fy, jtLedgerRow);
+        // The consolidated total row is at jtLedgerRow + written - 2 (before spacer)
+        const totRowNum = jtLedgerRow + written - 2;
+        grandDrCells.push('D' + totRowNum);
+        grandCrCells.push('E' + totRowNum);
+        jtLedgerRow += written;
       });
 
-      // Grand total SUM formulas
-      const gtVals = ['Grand Total -- ' + jeType];
-      for (let col=2; col<=totalCols3; col++) {
-        const cl = colLtr(col);
-        gtVals.push(firstDR < jtR2 ? { formula:'SUM('+cl+firstDR+':'+cl+(jtR2-1)+')' } : 0);
-      }
-      const gt = wsByType.addRow(gtVals); gt.height = 20;
-      gt.eachCell((cell,ci) => { cell.fill=totalFill; cell.font=boldFont; cell.border=border; if(ci===1) cell.alignment={horizontal:'left',vertical:'middle'}; else { cell.numFmt=numFmt; cell.alignment={horizontal:'right',vertical:'middle'}; } });
-      jtR2++;
-      wsByType.addRow([]); jtR2++;
+      // Grand total for this entry type
+      const gtRow = wsByType.addRow([
+        'Grand Total â€” ' + jeType, '', '',
+        grandDrCells.length ? { formula: grandDrCells.join('+') } : 0,
+        grandCrCells.length ? { formula: grandCrCells.join('+') } : 0
+      ]);
+      gtRow.height = 20;
+      gtRow.eachCell((cell, ci) => {
+        cell.fill = { type:'pattern',pattern:'solid',fgColor:{argb:'FF'+CLR.header} };
+        cell.font = { name:'Calibri',bold:true,size:10,color:{argb:'FFFFFFFF'} };
+        cell.border = border;
+        cell.alignment = { horizontal: ci<=3 ? 'left' : 'right', vertical:'middle' };
+        if (ci>=4) cell.numFmt = numFmt;
+      });
+      jtLedgerRow++;
+      wsByType.addRow([]); wsByType.addRow([]); jtLedgerRow += 2;
     });
-    wsByType.columns = sumCW;
-/* ── Write and download ── */
+    wsByType.columns = ledgerCols;
+/* â”€â”€ Write and download â”€â”€ */
     const buf  = await wb.xlsx.writeBuffer();
     const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
     saveAs(blob, `ConsolidatedPortfolio_${_today()}.xlsx`);
   };
 
-  /* ── Helper ── */
+  /* â”€â”€ Helper â”€â”€ */
   const _today = () => {
     const d = new Date();
     return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
