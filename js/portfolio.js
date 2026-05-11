@@ -535,9 +535,14 @@ const Portfolio = (() => {
     });
 
     /* ── SHEETS: Per-Lease Journal Entries ── */
-    portfolio.forEach((l) => {
+
+    // jeRefMap: track Total row cell refs for formula-linked summary sheets
+    const jeRefMap = [];
+    const colLtr = (n) => { let s = ''; while (n > 0) { s = String.fromCharCode(65 + (n-1)%26) + s; n = Math.floor((n-1)/26); } return s; };
+    portfolio.forEach((l, lIdx) => {
       const safeName = (l.label || 'Lease').replace(/[:\\/?*\[\]]/g, '').substring(0, 25) + ' JE';
       const wsje = wb.addWorksheet(safeName, { views: [{ state: 'frozen', ySplit: 3 }] });
+      jeRefMap[lIdx] = { sheetName: safeName, label: l.label, fyMap: {} };
 
       wsje.mergeCells('A1:F1');
       const tjel = wsje.getCell('A1');
@@ -560,10 +565,12 @@ const Portfolio = (() => {
       });
 
       let leRowIdx = 0;
+      let curRow = 4; // rows 1,2=title/sub, row 3=header
       (l.state.fyJournals || []).forEach(fyBlock => {
         // FY subheading
         const fyR = wsje.addRow([fyBlock.fy, '', '', '', '', '']);
         fyR.height = 18;
+        jeRefMap[lIdx].fyMap[fyBlock.fy] = {};
         fyR.eachCell(cell => {
           cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEBF5FB' } };
           cell.font = { name: 'Calibri', bold: true, size: 10, color: { argb: 'FF1E3A5F' } };
@@ -603,13 +610,136 @@ const Portfolio = (() => {
             if (ci >= 4 && ci <= 5) { cell.numFmt = numFmt; cell.alignment = { horizontal: 'right', vertical: 'middle' }; }
             else cell.alignment = { horizontal: 'left', vertical: 'middle' };
           });
+          // Store ref: wsje.rowCount = row number of this Total row
+          jeRefMap[lIdx].fyMap[fyBlock.fy][entry.label] = { sheet: safeName, drCell: 'D' + wsje.rowCount, crCell: 'E' + wsje.rowCount };
         });
       });
 
       wsje.columns = [{ width: 14 }, { width: 26 }, { width: 38 }, { width: 16 }, { width: 16 }, { width: 44 }];
     });
 
-    /* ── Write and download ── */
+    
+    /* -- Shared layout for formula-linked summary sheets -- */
+    const allFYs2 = [...new Set(portfolio.flatMap(l => (l.state.fyJournals||[]).map(f=>f.fy)))].sort();
+    const JE_TYPES = ['Initial Recognition','Interest Accrual','Lease Payment','Depreciation of ROU Asset'];
+    const EMOJIS2  = { 'Initial Recognition':'ðŸ“‹','Interest Accrual':'ðŸ’¸','Lease Payment':'ðŸ¦','Depreciation of ROU Asset':'ðŸ“‰' };
+    const nL2 = portfolio.length;
+    const totDrCol2 = 2 + nL2*2 + 1;
+    const totCrCol2 = totDrCol2 + 1;
+    const totalCols3 = totCrCol2;
+    const sumCW = [{ width: 34 }];
+    portfolio.forEach(() => { sumCW.push({ width: 20 }, { width: 20 }); });
+    sumCW.push({ width: 20 }, { width: 20 });
+    const summHdrVals = ['Financial Year / Entry Type'];
+    portfolio.forEach(l => { summHdrVals.push(l.label + ' Dr (Rs)', l.label + ' Cr (Rs)'); });
+    summHdrVals.push('Total Dr (Rs)', 'Total Cr (Rs)');
+
+    /* -- SHEET: JE by Year -- */
+    const wsByFY = wb.addWorksheet('JE by Year', { views: [{ state: 'frozen', ySplit: 3 }] });
+    wsByFY.mergeCells(1,1,1,totalCols3);
+    const fytT = wsByFY.getCell('A1');
+    fytT.value = 'Ind AS 116 - Consolidated JE by Financial Year (Formula-Linked)';
+    fytT.font = { name:'Calibri',bold:true,size:13,color:{argb:'FF'+CLR.white} };
+    fytT.fill = headerFill; fytT.alignment = { horizontal:'center',vertical:'middle' };
+    wsByFY.getRow(1).height = 28;
+    wsByFY.mergeCells(2,1,2,totalCols3);
+    const fytS = wsByFY.getCell('A2');
+    fytS.value = 'Amounts linked via formula to individual lease JE sheets | ' + portfolio.length + ' lease(s)';
+    fytS.font = { name:'Calibri',italic:true,size:9 }; fytS.fill = lightFill; fytS.alignment = { horizontal:'center' };
+    const fytHR = wsByFY.addRow(summHdrVals); fytHR.height = 22;
+    fytHR.eachCell(cell => { cell.fill=headerFill; cell.font=hFont; cell.border=border; cell.alignment={horizontal:'center',vertical:'middle',wrapText:true}; });
+    let fyR2 = 4;
+
+    allFYs2.forEach(fy => {
+      wsByFY.mergeCells(fyR2,1,fyR2,totalCols3);
+      const fyH = wsByFY.getCell(fyR2,1);
+      fyH.value = '  ' + fy; fyH.fill = { type:'pattern',pattern:'solid',fgColor:{argb:'FF'+CLR.subHeader} };
+      fyH.font = { name:'Calibri',bold:true,size:11,color:{argb:'FFFFFFFF'} }; fyH.border = border; fyH.alignment = { horizontal:'left',vertical:'middle' };
+      wsByFY.getRow(fyR2).height = 20; fyR2++;
+
+      JE_TYPES.forEach((jeType,ji) => {
+        const hasAny = jeRefMap.some(lr => lr.fyMap[fy] && lr.fyMap[fy][jeType]);
+        if (!hasAny) return;
+        const rFill = { type:'pattern',pattern:'solid',fgColor:{argb: ji%2===0?'FFF5F9FF':'FFFFFFFF'} };
+        const vals = [jeType]; const drc=[]; const crc=[];
+        jeRefMap.forEach((lr,li) => {
+          const ref = lr.fyMap[fy] && lr.fyMap[fy][jeType];
+          const dc = 2+li*2; const cc = dc+1;
+          if (ref) {
+            const sn = ref.sheet.replace(/'/g,"''");
+            vals.push({ formula:"'"+sn+"'!"+ref.drCell }, { formula:"'"+sn+"'!"+ref.crCell });
+            drc.push(colLtr(dc)+fyR2); crc.push(colLtr(cc)+fyR2);
+          } else { vals.push(0,0); }
+        });
+        vals.push(drc.length ? { formula:drc.join('+') } : 0, crc.length ? { formula:crc.join('+') } : 0);
+        const dr = wsByFY.addRow(vals); dr.height = 18;
+        dr.eachCell((cell,ci) => { cell.fill=rFill; cell.font=normFont; cell.border=border; if(ci===1) cell.alignment={horizontal:'left',vertical:'middle'}; else { cell.numFmt=numFmt; cell.alignment={horizontal:'right',vertical:'middle'}; } });
+        [totDrCol2,totCrCol2].forEach(tc => { const tc2=wsByFY.getCell(fyR2,tc); tc2.font=boldFont; tc2.fill=totalFill; });
+        fyR2++;
+      });
+      fyR2++;
+    });
+    wsByFY.columns = sumCW;
+
+    /* -- SHEET: JE by Type -- */
+    const wsByType = wb.addWorksheet('JE by Type', { views: [{ state: 'frozen', ySplit: 3 }] });
+    wsByType.mergeCells(1,1,1,totalCols3);
+    const jttT = wsByType.getCell('A1');
+    jttT.value = 'Ind AS 116 - Consolidated JE by Entry Type (Formula-Linked)';
+    jttT.font = { name:'Calibri',bold:true,size:13,color:{argb:'FF'+CLR.white} };
+    jttT.fill = headerFill; jttT.alignment = { horizontal:'center',vertical:'middle' };
+    wsByType.getRow(1).height = 28;
+    wsByType.mergeCells(2,1,2,totalCols3);
+    const jttS = wsByType.getCell('A2');
+    jttS.value = 'e.g. Depreciation = ' + portfolio.map(l=>l.label).join(' + ') + ' | Amounts formula-linked';
+    jttS.font = { name:'Calibri',italic:true,size:9 }; jttS.fill = lightFill; jttS.alignment = { horizontal:'center' };
+    let jtR2 = 3;
+
+    JE_TYPES.forEach(jeType => {
+      wsByType.mergeCells(jtR2,1,jtR2,totalCols3);
+      const jtH = wsByType.getCell(jtR2,1);
+      jtH.value = (EMOJIS2[jeType]||'') + '  ' + jeType;
+      jtH.fill = { type:'pattern',pattern:'solid',fgColor:{argb:'FF'+CLR.subHeader} };
+      jtH.font = { name:'Calibri',bold:true,size:11,color:{argb:'FFFFFFFF'} }; jtH.border=border; jtH.alignment={horizontal:'left',vertical:'middle'};
+      wsByType.getRow(jtR2).height = 22; jtR2++;
+
+      const jtHR2 = wsByType.addRow(summHdrVals); jtHR2.height = 20;
+      jtHR2.eachCell(cell => { cell.fill=headerFill; cell.font=hFont; cell.border=border; cell.alignment={horizontal:'center',vertical:'middle',wrapText:true}; });
+      jtR2++;
+
+      const firstDR = jtR2;
+      allFYs2.forEach((fy,fi) => {
+        const rFill = { type:'pattern',pattern:'solid',fgColor:{argb: fi%2===0?'FFF5F9FF':'FFFFFFFF'} };
+        const vals = [fy]; const drc=[]; const crc=[];
+        jeRefMap.forEach((lr,li) => {
+          const ref = lr.fyMap[fy] && lr.fyMap[fy][jeType];
+          const dc = 2+li*2; const cc = dc+1;
+          if (ref) {
+            const sn = ref.sheet.replace(/'/g,"''");
+            vals.push({ formula:"'"+sn+"'!"+ref.drCell }, { formula:"'"+sn+"'!"+ref.crCell });
+            drc.push(colLtr(dc)+jtR2); crc.push(colLtr(cc)+jtR2);
+          } else { vals.push(0,0); }
+        });
+        vals.push(drc.length ? { formula:drc.join('+') } : 0, crc.length ? { formula:crc.join('+') } : 0);
+        const dr = wsByType.addRow(vals); dr.height = 17;
+        dr.eachCell((cell,ci) => { cell.fill=rFill; cell.font=normFont; cell.border=border; if(ci===1) cell.alignment={horizontal:'left',vertical:'middle'}; else { cell.numFmt=numFmt; cell.alignment={horizontal:'right',vertical:'middle'}; } });
+        [totDrCol2,totCrCol2].forEach(tc => { const tc2=wsByType.getCell(jtR2,tc); tc2.font=boldFont; tc2.fill=totalFill; });
+        jtR2++;
+      });
+
+      // Grand total SUM formulas
+      const gtVals = ['Grand Total -- ' + jeType];
+      for (let col=2; col<=totalCols3; col++) {
+        const cl = colLtr(col);
+        gtVals.push(firstDR < jtR2 ? { formula:'SUM('+cl+firstDR+':'+cl+(jtR2-1)+')' } : 0);
+      }
+      const gt = wsByType.addRow(gtVals); gt.height = 20;
+      gt.eachCell((cell,ci) => { cell.fill=totalFill; cell.font=boldFont; cell.border=border; if(ci===1) cell.alignment={horizontal:'left',vertical:'middle'}; else { cell.numFmt=numFmt; cell.alignment={horizontal:'right',vertical:'middle'}; } });
+      jtR2++;
+      wsByType.addRow([]); jtR2++;
+    });
+    wsByType.columns = sumCW;
+/* ── Write and download ── */
     const buf  = await wb.xlsx.writeBuffer();
     const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
     saveAs(blob, `ConsolidatedPortfolio_${_today()}.xlsx`);
