@@ -619,39 +619,14 @@ const Portfolio = (() => {
     });
 
     
-    /* Consolidated JE by Entry Type - values from fySummary (no formula complexity) */
+    /* Consolidated JE by Entry Type - using fyJournals as single source of truth */
     const allFYs2 = [...new Set(portfolio.flatMap(l => (l.state.fyJournals||[]).map(f=>f.fy)))].sort();
-
-    // Account name lookup from fyJournals
-    const getAccNames = (jeType) => {
-      for (const l of portfolio) {
-        for (const fyBlock of (l.state.fyJournals||[])) {
-          const entry = fyBlock.entries.find(e => e.label === jeType);
-          if (entry) {
-            const drLine = entry.lines.find(ln => ln.dr != null);
-            const crLine = entry.lines.find(ln => ln.cr != null);
-            return { drAcc: drLine ? drLine.account : jeType, crAcc: crLine ? crLine.account : jeType };
-          }
-        }
-      }
-      return { drAcc: jeType, crAcc: jeType };
-    };
-
-    // Get FY amount for a given entry type from fySummary
-    const getFYAmt = (lease, fy, jeType) => {
-      const fyRow = (lease.state.fySummary||[]).find(r => r.fy === fy);
-      if (!fyRow) return 0;
-      if (jeType === 'Initial Recognition') return 0; // handled separately
-      if (jeType === 'Interest Accrual')        return Utils.round2(fyRow.interest  || 0);
-      if (jeType === 'Lease Payment')            return Utils.round2(fyRow.payments  || 0);
-      if (jeType === 'Depreciation of ROU Asset') return Utils.round2(fyRow.dep     || 0);
-      return 0;
-    };
+    const JE_TYPES2 = ['Initial Recognition','Interest Accrual','Lease Payment','Depreciation of ROU Asset'];
 
     const ledgerCols = [{ width: 16 }, { width: 30 }, { width: 44 }, { width: 18 }, { width: 18 }];
     const ledgerHdr  = ['Financial Year', 'Lease / Entity', 'Account / Particulars', 'Dr (Rs.)', 'Cr (Rs.)'];
 
-    const styleDataRow = (row, isDr) => {
+    const styleDataRow2 = (row, isDr) => {
       row.eachCell((cell, ci) => {
         cell.border = border;
         cell.fill = { type:'pattern', pattern:'solid', fgColor:{ argb: isDr ? 'FFF0F8FF' : 'FFFFFDE7' } };
@@ -660,7 +635,7 @@ const Portfolio = (() => {
         if (ci >= 4) cell.numFmt = numFmt;
       });
     };
-    const styleTotRow = (row) => {
+    const styleTotRow2 = (row) => {
       row.eachCell((cell, ci) => {
         cell.fill = totalFill; cell.font = boldFont; cell.border = border;
         cell.alignment = { horizontal: ci <= 3 ? 'left' : 'right', vertical:'middle' };
@@ -685,32 +660,22 @@ const Portfolio = (() => {
     const jttHR = wsByType.addRow(ledgerHdr); jttHR.height = 22;
     jttHR.eachCell(cell => { cell.fill=headerFill; cell.font=hFont; cell.border=border; cell.alignment={horizontal:'center',vertical:'middle',wrapText:true}; });
 
-    const JE_DEFS = [
-      { type: 'Initial Recognition',      key: null       },
-      { type: 'Interest Accrual',          key: 'interest' },
-      { type: 'Lease Payment',             key: 'payments' },
-      { type: 'Depreciation of ROU Asset', key: 'dep'      }
-    ];
-
-    JE_DEFS.forEach(({ type: jeType, key }) => {
-      const { drAcc, crAcc } = getAccNames(jeType);
-
-      // Check if any lease has this entry type in any FY
-      const hasAnyData = portfolio.some(l => {
-        if (jeType === 'Initial Recognition') return (l.state.fyJournals||[]).some(fb => fb.entries.some(e => e.label === jeType));
-        return (l.state.fySummary||[]).some(r => (r[key]||0) > 0);
-      });
-      if (!hasAnyData) return;
+    JE_TYPES2.forEach(jeType => {
+      // Check if ANY lease has this entry type in ANY FY using fyJournals
+      const hasAnyEntry = portfolio.some(l =>
+        (l.state.fyJournals||[]).some(fb => fb.entries.some(e => e.label === jeType))
+      );
+      if (!hasAnyEntry) return;
 
       // Section heading
-      let jtRow = wsByType.rowCount + 1;
-      wsByType.mergeCells(jtRow, 1, jtRow, 5);
-      const jtHead = wsByType.getCell(jtRow, 1);
+      const secRow = wsByType.rowCount + 1;
+      wsByType.mergeCells(secRow, 1, secRow, 5);
+      const jtHead = wsByType.getCell(secRow, 1);
       jtHead.value = '[ ' + jeType + ' ]';
       jtHead.fill  = { type:'pattern', pattern:'solid', fgColor:{ argb:'FF'+CLR.subHeader } };
       jtHead.font  = { name:'Calibri', bold:true, size:11, color:{ argb:'FFFFFFFF' } };
       jtHead.border = border; jtHead.alignment = { horizontal:'left', vertical:'middle' };
-      wsByType.getRow(jtRow).height = 22;
+      wsByType.getRow(secRow).height = 22;
 
       // Sub-headers
       const subHR = wsByType.addRow(ledgerHdr); subHR.height = 18;
@@ -719,49 +684,50 @@ const Portfolio = (() => {
       const grandDrRows = [], grandCrRows = [];
 
       allFYs2.forEach(fy => {
-        // Get amounts per lease for this FY + entry type
+        // Get per-lease amounts directly from fyJournals
         let fyHasData = false;
-        const fyAmts = portfolio.map(l => {
-          let amt = 0;
-          if (jeType === 'Initial Recognition') {
-            // Only first FY of each lease
-            const fb = (l.state.fyJournals||[]).find(fb => fb.entries.some(e => e.label === jeType));
-            if (fb && fb.fy === fy) {
-              const entry = fb.entries.find(e => e.label === jeType);
-              amt = entry ? entry.lines.reduce((s, ln) => s + (ln.dr||0), 0) : 0;
-            }
-          } else {
-            const fyRow = (l.state.fySummary||[]).find(r => r.fy === fy);
-            amt = fyRow ? Utils.round2(fyRow[key]||0) : 0;
-          }
+        const perLease = portfolio.map(l => {
+          const fyBlock = (l.state.fyJournals||[]).find(fb => fb.fy === fy);
+          if (!fyBlock) return { amt: 0, drAcc: jeType, crAcc: jeType };
+          const entry = fyBlock.entries.find(e => e.label === jeType);
+          if (!entry) return { amt: 0, drAcc: jeType, crAcc: jeType };
+          const amt = Utils.round2(entry.lines.reduce((s, ln) => s + (ln.dr||0), 0));
+          const drLine = entry.lines.find(ln => ln.dr != null);
+          const crLine = entry.lines.find(ln => ln.cr != null);
           if (amt > 0) fyHasData = true;
-          return amt;
+          return {
+            amt,
+            drAcc: drLine ? drLine.account : jeType,
+            crAcc: crLine ? crLine.account : jeType
+          };
         });
         if (!fyHasData) return;
 
-        // Dr rows (one per lease)
+        // Dr rows - one per lease (light blue)
         const drCellRefs = [], crCellRefs = [];
         portfolio.forEach((l, li) => {
-          const amt = fyAmts[li];
-          const drRow = wsByType.addRow([fy, l.label, '(Dr) ' + drAcc, amt, '']);
-          drRow.height = 16; styleDataRow(drRow, true);
-          drCellRefs.push('D' + wsByType.rowCount);
-        });
-        // Cr rows (one per lease)
-        portfolio.forEach((l, li) => {
-          const amt = fyAmts[li];
-          const crRow = wsByType.addRow([fy, l.label, '    (Cr) ' + crAcc, '', amt]);
-          crRow.height = 16; styleDataRow(crRow, false);
-          crCellRefs.push('E' + wsByType.rowCount);
+          const { amt, drAcc } = perLease[li];
+          const row = wsByType.addRow([fy, l.label, '(Dr) ' + drAcc, amt > 0 ? amt : '', '']);
+          row.height = 16; styleDataRow2(row, true);
+          if (amt > 0) drCellRefs.push('D' + wsByType.rowCount);
         });
 
-        // Consolidated total row
-        const totDr = fyAmts.reduce((s, a) => s + a, 0);
+        // Cr rows - one per lease (light yellow)
+        portfolio.forEach((l, li) => {
+          const { amt, crAcc } = perLease[li];
+          const row = wsByType.addRow([fy, l.label, '    (Cr) ' + crAcc, '', amt > 0 ? amt : '']);
+          row.height = 16; styleDataRow2(row, false);
+          if (amt > 0) crCellRefs.push('E' + wsByType.rowCount);
+        });
+
+        // Consolidated Total row for this FY
+        const totDr = perLease.reduce((s, x) => s + x.amt, 0);
         const totRow = wsByType.addRow([
           fy + ' - Consolidated Total', '', '',
-          { formula: drCellRefs.join('+') }, { formula: crCellRefs.join('+') }
+          drCellRefs.length ? { formula: drCellRefs.join('+') } : 0,
+          crCellRefs.length ? { formula: crCellRefs.join('+') } : 0
         ]);
-        totRow.height = 18; styleTotRow(totRow);
+        totRow.height = 18; styleTotRow2(totRow);
         grandDrRows.push('D' + wsByType.rowCount);
         grandCrRows.push('E' + wsByType.rowCount);
         wsByType.addRow([]); // spacer
