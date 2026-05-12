@@ -243,6 +243,17 @@ const Portfolio = (() => {
      EXPORT CONSOLIDATED EXCEL  â€“  Multi-sheet ExcelJS workbook
   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
   const exportConsolidatedExcel = async (portfolio) => {
+    // DEBUG: log fyJournals to browser console
+    console.group('exportConsolidatedExcel DEBUG');
+    (portfolio||[]).forEach((l, i) => {
+      const jnls = l.state.fyJournals || [];
+      console.log('Lease '+i+': '+l.label+' | fyJournals FYs: '+jnls.length);
+      jnls.slice(0,3).forEach(fb => {
+        console.log('  '+fb.fy+' entries: '+fb.entries.map(function(e){return e.label;}).join(' | '));
+      });
+    });
+    console.groupEnd();
+
     if (!portfolio || portfolio.length === 0) {
       alert('No leases in portfolio. Save at least one lease first.');
       return;
@@ -755,7 +766,7 @@ const Portfolio = (() => {
 /* â”€â”€ Write and download â”€â”€ */
     const buf  = await wb.xlsx.writeBuffer();
     const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    saveAs(blob, `ConsolidatedPortfolio_${_today()}.xlsx`);
+    saveAs(blob, `ConsolidatedPortfolio_${_today()}_v7.xlsx`);
   };
 
   /* â”€â”€ Helper â”€â”€ */
