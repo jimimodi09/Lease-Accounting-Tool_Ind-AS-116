@@ -243,17 +243,6 @@ const Portfolio = (() => {
      EXPORT CONSOLIDATED EXCEL  â€“  Multi-sheet ExcelJS workbook
   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
   const exportConsolidatedExcel = async (portfolio) => {
-    // DEBUG: log fyJournals to browser console
-    console.group('exportConsolidatedExcel DEBUG');
-    (portfolio||[]).forEach((l, i) => {
-      const jnls = l.state.fyJournals || [];
-      console.log('Lease '+i+': '+l.label+' | fyJournals FYs: '+jnls.length);
-      jnls.slice(0,3).forEach(fb => {
-        console.log('  '+fb.fy+' entries: '+fb.entries.map(function(e){return e.label;}).join(' | '));
-      });
-    });
-    console.groupEnd();
-
     if (!portfolio || portfolio.length === 0) {
       alert('No leases in portfolio. Save at least one lease first.');
       return;
@@ -714,21 +703,23 @@ const Portfolio = (() => {
         });
         if (!fyHasData) return;
 
-        // Dr rows - one per lease (light blue)
+        // Dr rows - one per lease, only if amt > 0 (skip ended leases)
         const drCellRefs = [], crCellRefs = [];
         portfolio.forEach((l, li) => {
           const { amt, drAcc } = perLease[li];
-          const row = wsByType.addRow([fy, l.label, '(Dr) ' + drAcc, amt > 0 ? amt : '', '']);
+          if (amt <= 0) return; // skip blank entries for ended leases
+          const row = wsByType.addRow([fy, l.label, '(Dr) ' + drAcc, amt, '']);
           row.height = 16; styleDataRow2(row, true);
-          if (amt > 0) drCellRefs.push('D' + wsByType.rowCount);
+          drCellRefs.push('D' + wsByType.rowCount);
         });
 
-        // Cr rows - one per lease (light yellow)
+        // Cr rows - one per lease, only if amt > 0 (skip ended leases)
         portfolio.forEach((l, li) => {
           const { amt, crAcc } = perLease[li];
-          const row = wsByType.addRow([fy, l.label, '    (Cr) ' + crAcc, '', amt > 0 ? amt : '']);
+          if (amt <= 0) return; // skip blank entries for ended leases
+          const row = wsByType.addRow([fy, l.label, '    (Cr) ' + crAcc, '', amt]);
           row.height = 16; styleDataRow2(row, false);
-          if (amt > 0) crCellRefs.push('E' + wsByType.rowCount);
+          crCellRefs.push('E' + wsByType.rowCount);
         });
 
         // Consolidated Total row for this FY
@@ -766,7 +757,7 @@ const Portfolio = (() => {
 /* â”€â”€ Write and download â”€â”€ */
     const buf  = await wb.xlsx.writeBuffer();
     const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    saveAs(blob, `ConsolidatedPortfolio_${_today()}_v7.xlsx`);
+    saveAs(blob, `ConsolidatedPortfolio_${_today()}.xlsx`);
   };
 
   /* â”€â”€ Helper â”€â”€ */
