@@ -643,107 +643,130 @@ const Portfolio = (() => {
       });
     };
 
-    /* SHEET: Consolidated JE by Entry Type */
+    /* SHEET: Consolidated JE — FY-first layout (all entry types together per year) */
     const wsByType = wb.addWorksheet('Consolidated JE', { views: [{ state: 'frozen', ySplit: 3 }] });
     wsByType.mergeCells('A1:E1');
     const jttT = wsByType.getCell('A1');
-    jttT.value = 'Ind AS 116 - Consolidated Journal Entries by Entry Type (All Leases)';
+    jttT.value = 'Ind AS 116 - Consolidated Journal Entries (Year-wise, All Leases)';
     jttT.font  = { name:'Calibri', bold:true, size:13, color:{ argb:'FF'+CLR.white } };
     jttT.fill  = headerFill; jttT.alignment = { horizontal:'center', vertical:'middle' };
     wsByType.getRow(1).height = 28;
     wsByType.mergeCells('A2:E2');
     const jttS = wsByType.getCell('A2');
     jttS.value = 'Consolidated: ' + portfolio.map(l => l.label).join(' + ')
-               + ' | Blue = Debit | Yellow = Credit | Dr always equals Cr';
+               + ' | Blue = Debit | Yellow = Credit | Grouped by Financial Year';
     jttS.font  = { name:'Calibri', italic:true, size:9 };
     jttS.fill  = lightFill; jttS.alignment = { horizontal:'center' };
     const jttHR = wsByType.addRow(ledgerHdr); jttHR.height = 22;
     jttHR.eachCell(cell => { cell.fill=headerFill; cell.font=hFont; cell.border=border; cell.alignment={horizontal:'center',vertical:'middle',wrapText:true}; });
 
-    JE_TYPES2.forEach(jeType => {
-      // Check if ANY lease has this entry type in ANY FY using fyJournals
-      const hasAnyEntry = portfolio.some(l =>
-        (l.state.fyJournals||[]).some(fb => fb.entries.some(e => e.label === jeType))
+    /* ── FY-FIRST: for each FY, show all entry types together ── */
+    allFYs2.forEach(fy => {
+      // Skip FY if no lease has any data in it
+      const fyHasAny = portfolio.some(l =>
+        (l.state.fyJournals||[]).some(fb =>
+          fb.fy === fy && fb.entries.some(e => e.lines.reduce((s,ln)=>s+(ln.dr||0),0) > 0)
+        )
       );
-      if (!hasAnyEntry) return;
+      if (!fyHasAny) return;
 
-      // Section heading
-      const secRow = wsByType.rowCount + 1;
-      wsByType.mergeCells(secRow, 1, secRow, 5);
-      const jtHead = wsByType.getCell(secRow, 1);
-      jtHead.value = '[ ' + jeType + ' ]';
-      jtHead.fill  = { type:'pattern', pattern:'solid', fgColor:{ argb:'FF'+CLR.subHeader } };
-      jtHead.font  = { name:'Calibri', bold:true, size:11, color:{ argb:'FFFFFFFF' } };
-      jtHead.border = border; jtHead.alignment = { horizontal:'left', vertical:'middle' };
-      wsByType.getRow(secRow).height = 22;
+      // ── FY Banner (dark header spanning all 5 columns) ──
+      const fyBannerIdx = wsByType.rowCount + 1;
+      wsByType.mergeCells(fyBannerIdx, 1, fyBannerIdx, 5);
+      const fyBanner = wsByType.getCell(fyBannerIdx, 1);
+      fyBanner.value = fy;
+      fyBanner.fill  = { type:'pattern', pattern:'solid', fgColor:{ argb:'FF'+CLR.header } };
+      fyBanner.font  = { name:'Calibri', bold:true, size:12, color:{ argb:'FFFFFFFF' } };
+      fyBanner.border = border;
+      fyBanner.alignment = { horizontal:'center', vertical:'middle' };
+      wsByType.getRow(fyBannerIdx).height = 24;
 
-      // Sub-headers
-      const subHR = wsByType.addRow(ledgerHdr); subHR.height = 18;
-      subHR.eachCell(cell => { cell.fill=subFill; cell.font=hFont; cell.border=border; cell.alignment={horizontal:'center',vertical:'middle'}; });
+      const fyGrandDrRefs = [], fyGrandCrRefs = [];
 
-      const grandDrRows = [], grandCrRows = [];
+      // ── Loop through each entry type within this FY ──
+      JE_TYPES2.forEach(jeType => {
+        // Check if ANY lease has this type with amt > 0 in this FY
+        const typeHasData = portfolio.some(l => {
+          const fb = (l.state.fyJournals||[]).find(f => f.fy === fy);
+          if (!fb) return false;
+          const e = fb.entries.find(en => en.label === jeType);
+          if (!e) return false;
+          return e.lines.reduce((s,ln)=>s+(ln.dr||0),0) > 0;
+        });
+        if (!typeHasData) return;
 
-      allFYs2.forEach(fy => {
-        // Get per-lease amounts directly from fyJournals
-        let fyHasData = false;
+        // Entry-type sub-header (medium-blue band)
+        const secRow = wsByType.rowCount + 1;
+        wsByType.mergeCells(secRow, 1, secRow, 5);
+        const jtHead = wsByType.getCell(secRow, 1);
+        jtHead.value = '[ ' + jeType + ' ]';
+        jtHead.fill  = { type:'pattern', pattern:'solid', fgColor:{ argb:'FF'+CLR.subHeader } };
+        jtHead.font  = { name:'Calibri', bold:true, size:10, color:{ argb:'FFFFFFFF' } };
+        jtHead.border = border;
+        jtHead.alignment = { horizontal:'left', vertical:'middle' };
+        wsByType.getRow(secRow).height = 20;
+
+        // Column sub-headers
+        const subHR2 = wsByType.addRow(ledgerHdr); subHR2.height = 17;
+        subHR2.eachCell(cell => { cell.fill=subFill; cell.font=hFont; cell.border=border; cell.alignment={horizontal:'center',vertical:'middle'}; });
+
+        // Collect per-lease amounts
         const perLease = portfolio.map(l => {
-          const fyBlock = (l.state.fyJournals||[]).find(fb => fb.fy === fy);
-          if (!fyBlock) return { amt: 0, drAcc: jeType, crAcc: jeType };
-          const entry = fyBlock.entries.find(e => e.label === jeType);
-          if (!entry) return { amt: 0, drAcc: jeType, crAcc: jeType };
-          const amt = Utils.round2(entry.lines.reduce((s, ln) => s + (ln.dr||0), 0));
+          const fb = (l.state.fyJournals||[]).find(f => f.fy === fy);
+          if (!fb) return { amt:0, drAcc:jeType, crAcc:jeType };
+          const entry = fb.entries.find(e => e.label === jeType);
+          if (!entry) return { amt:0, drAcc:jeType, crAcc:jeType };
+          const amt = Utils.round2(entry.lines.reduce((s,ln)=>s+(ln.dr||0),0));
           const drLine = entry.lines.find(ln => ln.dr != null);
           const crLine = entry.lines.find(ln => ln.cr != null);
-          if (amt > 0) fyHasData = true;
           return {
             amt,
             drAcc: drLine ? drLine.account : jeType,
             crAcc: crLine ? crLine.account : jeType
           };
         });
-        if (!fyHasData) return;
 
-        // Dr rows - one per lease, only if amt > 0 (skip ended leases)
         const drCellRefs = [], crCellRefs = [];
+
+        // Dr rows (light blue) — one per lease, skip zero
         portfolio.forEach((l, li) => {
           const { amt, drAcc } = perLease[li];
-          if (amt <= 0) return; // skip blank entries for ended leases
+          if (amt <= 0) return;
           const row = wsByType.addRow([fy, l.label, '(Dr) ' + drAcc, amt, '']);
           row.height = 16; styleDataRow2(row, true);
           drCellRefs.push('D' + wsByType.rowCount);
         });
 
-        // Cr rows - one per lease, only if amt > 0 (skip ended leases)
+        // Cr rows (light yellow) — one per lease, skip zero
         portfolio.forEach((l, li) => {
           const { amt, crAcc } = perLease[li];
-          if (amt <= 0) return; // skip blank entries for ended leases
+          if (amt <= 0) return;
           const row = wsByType.addRow([fy, l.label, '    (Cr) ' + crAcc, '', amt]);
           row.height = 16; styleDataRow2(row, false);
           crCellRefs.push('E' + wsByType.rowCount);
         });
 
-        // Consolidated Total row for this FY
-        const totDr = perLease.reduce((s, x) => s + x.amt, 0);
-        const totRow = wsByType.addRow([
+        // Consolidated Total for this entry type in this FY
+        const typeTotRow = wsByType.addRow([
           fy + ' - Consolidated Total', '', '',
           drCellRefs.length ? { formula: drCellRefs.join('+') } : 0,
           crCellRefs.length ? { formula: crCellRefs.join('+') } : 0
         ]);
-        totRow.height = 18; styleTotRow2(totRow);
-        grandDrRows.push('D' + wsByType.rowCount);
-        grandCrRows.push('E' + wsByType.rowCount);
-        wsByType.addRow([]); // spacer
-      });
+        typeTotRow.height = 18; styleTotRow2(typeTotRow);
+        fyGrandDrRefs.push('D' + wsByType.rowCount);
+        fyGrandCrRefs.push('E' + wsByType.rowCount);
+        wsByType.addRow([]); // spacer between entry types
+      }); // end JE_TYPES2.forEach
 
-      // Grand Total for this entry type
-      if (grandDrRows.length > 0) {
-        const gt = wsByType.addRow([
-          'Grand Total - ' + jeType, '', '',
-          { formula: grandDrRows.join('+') },
-          { formula: grandCrRows.join('+') }
+      // ── FY Grand Total (all entry types combined for this FY) ──
+      if (fyGrandDrRefs.length > 0) {
+        const fyGT = wsByType.addRow([
+          fy + ' - Grand Total (All Entries)', '', '',
+          { formula: fyGrandDrRefs.join('+') },
+          { formula: fyGrandCrRefs.join('+') }
         ]);
-        gt.height = 22;
-        gt.eachCell((cell, ci) => {
+        fyGT.height = 24;
+        fyGT.eachCell((cell, ci) => {
           cell.fill = { type:'pattern', pattern:'solid', fgColor:{ argb:'FF'+CLR.header } };
           cell.font = { name:'Calibri', bold:true, size:10, color:{ argb:'FFFFFFFF' } };
           cell.border = border;
@@ -751,8 +774,9 @@ const Portfolio = (() => {
           if (ci >= 4) cell.numFmt = numFmt;
         });
       }
+      // Two spacer rows between FYs
       wsByType.addRow([]); wsByType.addRow([]);
-    });
+    }); // end allFYs2.forEach
     wsByType.columns = ledgerCols;
 /* â”€â”€ Write and download â”€â”€ */
     const buf  = await wb.xlsx.writeBuffer();
