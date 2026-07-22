@@ -1,11 +1,11 @@
-/* â”€â”€ portfolio.js â€“ Portfolio Consolidation Module â”€â”€ */
+/* â� Rs.â� Rs. portfolio.js  -  Portfolio Consolidation Module â� Rs.â� Rs. */
 'use strict';
 
 const Portfolio = (() => {
 
-  /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-     EXPORT JSON  â€“  Save entire portfolio to a .json file
-  â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  /* â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.
+     EXPORT JSON   -   Save entire portfolio to a .json file
+  â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs. */
   const exportJSON = (portfolio) => {
     if (!portfolio || portfolio.length === 0) {
       alert('No leases in portfolio to export. Save at least one lease first.');
@@ -27,10 +27,10 @@ const Portfolio = (() => {
     URL.revokeObjectURL(url);
   };
 
-  /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-     IMPORT JSON  â€“  Load portfolio from a .json file
+  /* â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.
+     IMPORT JSON   -   Load portfolio from a .json file
      callback(leases) called with parsed array on success
-  â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs. */
   const importJSON = (callback) => {
     const input = document.createElement('input');
     input.type  = 'file';
@@ -69,9 +69,9 @@ const Portfolio = (() => {
     input.click();
   };
 
-  /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-     BUILD CONSOLIDATED  â€“  Aggregate all leases by FY
-  â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  /* â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.
+     BUILD CONSOLIDATED   -   Aggregate all leases by FY
+  â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs. */
   const buildConsolidated = (portfolio) => {
     if (!portfolio || portfolio.length === 0) return null;
 
@@ -131,9 +131,9 @@ const Portfolio = (() => {
     };
   };
 
-  /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-     RENDER CONSOLIDATED VIEW  â€“  Populate #consolidatedView
-  â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  /* â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.
+     RENDER CONSOLIDATED VIEW   -   Populate #consolidatedView
+  â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs. */
   const renderConsolidatedView = (portfolio) => {
     const container = document.getElementById('consolidatedView');
     if (!container) return;
@@ -239,9 +239,9 @@ const Portfolio = (() => {
       </div>`;
   };
 
-  /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-     EXPORT CONSOLIDATED EXCEL  â€“  Multi-sheet ExcelJS workbook
-  â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  /* â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.
+     EXPORT CONSOLIDATED EXCEL   -   Multi-sheet ExcelJS workbook
+  â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs. */
   const exportConsolidatedExcel = async (portfolio) => {
     if (!portfolio || portfolio.length === 0) {
       alert('No leases in portfolio. Save at least one lease first.');
@@ -258,7 +258,7 @@ const Portfolio = (() => {
     wb.created    = new Date();
     wb.properties.date1904 = false;
 
-    // â”€â”€ Color palette â”€â”€
+    // â� Rs.â� Rs. Color palette â� Rs.â� Rs.
     const CLR = { header: '1E3A5F', subHeader: '2D6A9F', accent: '4F81BD', total: 'D6E4F0', white: 'FFFFFF', light: 'EBF5FB', border: 'B0C4DE' };
     const headerFill  = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + CLR.header } };
     const subFill     = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + CLR.subHeader } };
@@ -281,11 +281,11 @@ const Portfolio = (() => {
       });
     };
 
-    /* â”€â”€ SHEET 1: Portfolio Summary â”€â”€ */
+    /* â� Rs.â� Rs. SHEET 1: Portfolio Summary â� Rs.â� Rs. */
     const ws1 = wb.addWorksheet('Portfolio Summary', { views: [{ state: 'frozen', ySplit: 5 }] });
     ws1.mergeCells('A1:I1');
     const t1 = ws1.getCell('A1');
-    t1.value = 'Ind AS 116 â€“ Consolidated Lease Portfolio Summary';
+    t1.value = 'Ind AS 116  -  Consolidated Lease Portfolio Summary';
     t1.font  = { name: 'Calibri', bold: true, size: 14, color: { argb: 'FF' + CLR.white } };
     t1.fill  = headerFill;
     t1.alignment = { horizontal: 'center', vertical: 'middle' };
@@ -321,7 +321,7 @@ const Portfolio = (() => {
     ws1.getRow(4).height = 22;
 
     // Individual lease table headers
-    const s1Headers = ['Lease Name','Start Date','End Date','Term (months)','IBR (%)','Lease Liability (PV) â‚¹','ROU Asset â‚¹','Total Interest â‚¹','Total Payments â‚¹'];
+    const s1Headers = ['Lease Name','Start Date','End Date','Term (months)','IBR (%)','Lease Liability (PV) Rs.','ROU Asset Rs.','Total Interest Rs.','Total Payments Rs.'];
     const s1Row = ws1.addRow(s1Headers);
     s1Row.height = 20;
     s1Row.eachCell((cell, i) => {
@@ -362,11 +362,11 @@ const Portfolio = (() => {
 
     ws1.columns = [{ width: 32 }, { width: 14 }, { width: 14 }, { width: 14 }, { width: 10 }, { width: 20 }, { width: 18 }, { width: 18 }, { width: 18 }];
 
-    /* â”€â”€ SHEET 2: Consolidated FY Summary â”€â”€ */
+    /* â� Rs.â� Rs. SHEET 2: Consolidated FY Summary â� Rs.â� Rs. */
     const ws2 = wb.addWorksheet('Consolidated FY Summary', { views: [{ state: 'frozen', ySplit: 3 }] });
     ws2.mergeCells('A1:I1');
     const t3 = ws2.getCell('A1');
-    t3.value = 'Ind AS 116 â€“ Consolidated FY-wise Lease Summary (All Leases)';
+    t3.value = 'Ind AS 116  -  Consolidated FY-wise Lease Summary (All Leases)';
     t3.font  = { name: 'Calibri', bold: true, size: 13, color: { argb: 'FF' + CLR.white } };
     t3.fill  = headerFill; t3.alignment = { horizontal: 'center', vertical: 'middle' };
     ws2.getRow(1).height = 28;
@@ -376,7 +376,7 @@ const Portfolio = (() => {
     t4.value = `Aggregated across ${portfolio.length} lease(s)  |  Generated: ${new Date().toLocaleString('en-IN')}`;
     t4.font  = { name: 'Calibri', italic: true, size: 9 }; t4.fill = lightFill; t4.alignment = { horizontal: 'center' };
 
-    const s2Headers = ['Financial Year','Opening Liability â‚¹','Interest Accrued â‚¹','Payments â‚¹','Closing Liability â‚¹','Current Portion â‚¹','Non-Current Portion â‚¹','Depreciation â‚¹','ROU Book Value â‚¹'];
+    const s2Headers = ['Financial Year','Opening Liability Rs.','Interest Accrued Rs.','Payments Rs.','Closing Liability Rs.','Current Portion Rs.','Non-Current Portion Rs.','Depreciation Rs.','ROU Book Value Rs.'];
     const s2HRow = ws2.addRow(s2Headers);
     s2HRow.height = 20;
     s2HRow.eachCell((cell, i) => {
@@ -406,11 +406,11 @@ const Portfolio = (() => {
 
     ws2.columns = [{ width: 16 }, { width: 18 }, { width: 18 }, { width: 16 }, { width: 18 }, { width: 16 }, { width: 20 }, { width: 16 }, { width: 18 }];
 
-    /* â”€â”€ SHEET 3: Consolidated Journal Entries â”€â”€ */
+    /* â� Rs.â� Rs. SHEET 3: Consolidated Journal Entries â� Rs.â� Rs. */
     const wje = wb.addWorksheet('Consolidated Journal Entries', { views: [{ state: 'frozen', ySplit: 3 }] });
     wje.mergeCells('A1:G1');
     const tje = wje.getCell('A1');
-    tje.value = 'Ind AS 116 â€“ Consolidated Journal Entries (All Leases, All FYs)';
+    tje.value = 'Ind AS 116  -  Consolidated Journal Entries (All Leases, All FYs)';
     tje.font  = { name: 'Calibri', bold: true, size: 13, color: { argb: 'FF' + CLR.white } };
     tje.fill  = headerFill; tje.alignment = { horizontal: 'center', vertical: 'middle' };
     wje.getRow(1).height = 28;
@@ -420,7 +420,7 @@ const Portfolio = (() => {
     tje2.value = `Aggregated across ${portfolio.length} lease(s)  |  Generated: ${new Date().toLocaleString('en-IN')}  |  Prepared by: CA Jimi R Modi`;
     tje2.font  = { name: 'Calibri', italic: true, size: 9 }; tje2.fill = lightFill; tje2.alignment = { horizontal: 'center' };
 
-    const jeHeaders = ['Financial Year', 'Lease Name', 'Journal Entry Type', 'Account / Particulars', 'Dr (â‚¹)', 'Cr (â‚¹)', 'Narration'];
+    const jeHeaders = ['Financial Year', 'Lease Name', 'Journal Entry Type', 'Account / Particulars', 'Dr (Rs.)', 'Cr (Rs.)', 'Narration'];
     const jeHRow = wje.addRow(jeHeaders);
     jeHRow.height = 20;
     jeHRow.eachCell((cell, ci) => {
@@ -656,13 +656,13 @@ const Portfolio = (() => {
       wsByType.addRow([]); wsByType.addRow([]);
     }); // end allFYs2.forEach
     wsByType.columns = ledgerCols;
-/* â”€â”€ Write and download â”€â”€ */
+/* â� Rs.â� Rs. Write and download â� Rs.â� Rs. */
     const buf  = await wb.xlsx.writeBuffer();
     const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
     saveAs(blob, `ConsolidatedPortfolio_${_today()}.xlsx`);
   };
 
-  /* â”€â”€ Helper â”€â”€ */
+  /* â� Rs.â� Rs. Helper â� Rs.â� Rs. */
   const _today = () => {
     const d = new Date();
     return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
