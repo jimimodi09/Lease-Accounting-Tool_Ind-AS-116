@@ -189,10 +189,10 @@ const Portfolio = (() => {
       </tr>`).join('');
 
     container.innerHTML = `
-      <div class="section-title" style="margin-top:0;">ðŸ“Š Consolidated Portfolio KPIs</div>
+      <div class="section-title" style="margin-top:0;">&#x1F4CA; Consolidated Portfolio KPIs</div>
       <div class="kpi-grid">${kpiHtml}</div>
 
-      <div class="section-title" style="margin-top:28px;">ðŸ“… Consolidated FY-wise Summary (All Leases)</div>
+      <div class="section-title" style="margin-top:28px;">&#x1F4C5; Consolidated FY-wise Summary (All Leases)</div>
       <div class="table-wrapper">
         <table class="data-table" id="consolidatedFYTable">
           <thead>
@@ -223,7 +223,7 @@ const Portfolio = (() => {
         </table>
       </div>
 
-      <div class="section-title" style="margin-top:28px;">ðŸ“‹ Individual Lease Breakdown</div>
+      <div class="section-title" style="margin-top:28px;">&#x1F4CB; Individual Lease Breakdown</div>
       <div class="table-wrapper">
         <table class="data-table" id="leaseBreakdownTable">
           <thead>
@@ -493,132 +493,10 @@ const Portfolio = (() => {
       { width: 38 }, { width: 16 }, { width: 16 }, { width: 40 }
     ];
 
-    /* â”€â”€ SHEETS 4+: Per-Lease Amortisation â”€â”€ */
-    portfolio.forEach((l) => {
-      const safeName = (l.label || 'Lease').replace(/[:\\/?*\[\]]/g, '').substring(0, 25) + ' Amort';
-      const wsl = wb.addWorksheet(safeName, { views: [{ state: 'frozen', ySplit: 3 }] });
-
-      wsl.mergeCells('A1:I1');
-      const tl = wsl.getCell('A1');
-      tl.value = `${l.label} â€“ Lease Liability Amortisation Schedule`;
-      tl.font  = { name: 'Calibri', bold: true, size: 12, color: { argb: 'FF' + CLR.white } };
-      tl.fill  = subFill; tl.alignment = { horizontal: 'center', vertical: 'middle' };
-      wsl.getRow(1).height = 26;
-
-      wsl.mergeCells('A2:I2');
-      const tl2 = wsl.getCell('A2');
-      const s = l.state;
-      tl2.value = `IBR: ${s.inputs.roi}%  |  Term: ${s.inputs.leaseTerm}m  |  PV: â‚¹${Utils.fmtNum(s.pvResult.totalPV)}  |  ROU: â‚¹${Utils.fmtNum(s.inputs.rouInitial)}`;
-      tl2.font  = { name: 'Calibri', italic: true, size: 9 }; tl2.fill = lightFill; tl2.alignment = { horizontal: 'center' };
-
-      const slHeaders = ['#', 'Date', 'FY', 'Months', 'Rate (%)', 'Opening Balance â‚¹', 'Interest â‚¹', 'Payment â‚¹', 'Closing Balance â‚¹'];
-      const slHRow = wsl.addRow(slHeaders);
-      slHRow.height = 20;
-      slHRow.eachCell((cell) => {
-        cell.fill = subFill; cell.font = hFont; cell.border = border;
-        cell.alignment = { horizontal: 'center', vertical: 'middle' };
-      });
-
-      (s.amortRows || []).forEach((r, idx) => {
-        const dateStr = r.date ? Utils.fmtDate(new Date(r.date)) : '';
-        const row = wsl.addRow([r.period || (idx + 1), dateStr, r.fy || '', r.months || '', r.rate || '', r.openBal || 0, r.interest || 0, r.payment || 0, r.closeBal || 0]);
-        row.height = 16;
-        const fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: idx % 2 === 0 ? 'FFF5F9FF' : 'FFFFFFFF' } };
-        row.eachCell((cell, ci) => {
-          cell.fill = fill; cell.font = normFont; cell.border = border;
-          cell.alignment = { horizontal: ci <= 4 ? 'center' : 'right', vertical: 'middle' };
-          if (ci >= 6) cell.numFmt = numFmt;
-        });
-      });
-
-      wsl.columns = [{ width: 6 }, { width: 14 }, { width: 12 }, { width: 8 }, { width: 8 }, { width: 18 }, { width: 16 }, { width: 16 }, { width: 18 }];
-    });
-
-    /* â”€â”€ SHEETS: Per-Lease Journal Entries â”€â”€ */
-
-    // jeRefMap: track Total row cell refs for formula-linked summary sheets
-    const jeRefMap = [];
-    const colLtr = (n) => { let s = ''; while (n > 0) { s = String.fromCharCode(65 + (n-1)%26) + s; n = Math.floor((n-1)/26); } return s; };
-    portfolio.forEach((l, lIdx) => {
-      const safeName = (l.label || 'Lease').replace(/[:\\/?*\[\]]/g, '').substring(0, 25) + ' JE';
-      const wsje = wb.addWorksheet(safeName, { views: [{ state: 'frozen', ySplit: 3 }] });
-      jeRefMap[lIdx] = { sheetName: safeName, label: l.label, fyMap: {} };
-
-      wsje.mergeCells('A1:F1');
-      const tjel = wsje.getCell('A1');
-      tjel.value = `${l.label} â€“ Journal Entries (Ind AS 116)`;
-      tjel.font  = { name: 'Calibri', bold: true, size: 12, color: { argb: 'FF' + CLR.white } };
-      tjel.fill  = subFill; tjel.alignment = { horizontal: 'center', vertical: 'middle' };
-      wsje.getRow(1).height = 26;
-
-      wsje.mergeCells('A2:F2');
-      const tje2l = wsje.getCell('A2');
-      tje2l.value = `Prepared by: CA Jimi R Modi  |  Generated: ${new Date().toLocaleString('en-IN')}`;
-      tje2l.font  = { name: 'Calibri', italic: true, size: 9 }; tje2l.fill = lightFill; tje2l.alignment = { horizontal: 'center' };
-
-      const jeHdrs = ['Financial Year', 'Journal Entry Type', 'Account / Particulars', 'Dr (â‚¹)', 'Cr (â‚¹)', 'Narration'];
-      const jeHR   = wsje.addRow(jeHdrs);
-      jeHR.height  = 20;
-      jeHR.eachCell((cell, ci) => {
-        cell.fill = subFill; cell.font = hFont; cell.border = border;
-        cell.alignment = { horizontal: ci <= 2 ? 'center' : ci === 3 ? 'left' : 'right', vertical: 'middle' };
-      });
-
-      let leRowIdx = 0;
-      let curRow = 4; // rows 1,2=title/sub, row 3=header
-      (l.state.fyJournals || []).forEach(fyBlock => {
-        // FY subheading
-        const fyR = wsje.addRow([fyBlock.fy, '', '', '', '', '']);
-        fyR.height = 18;
-        jeRefMap[lIdx].fyMap[fyBlock.fy] = {};
-        fyR.eachCell(cell => {
-          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEBF5FB' } };
-          cell.font = { name: 'Calibri', bold: true, size: 10, color: { argb: 'FF1E3A5F' } };
-          cell.border = border;
-          cell.alignment = { horizontal: 'left', vertical: 'middle' };
-        });
-
-        fyBlock.entries.forEach(entry => {
-          entry.lines.forEach((line, lineIdx) => {
-            const fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: leRowIdx % 2 === 0 ? 'FFF5F9FF' : 'FFFFFFFF' } };
-            const row = wsje.addRow([
-              lineIdx === 0 ? fyBlock.fy : '',
-              lineIdx === 0 ? entry.label : '',
-              (line.cr !== null ? '    ' : '') + line.account,
-              line.dr != null ? line.dr : '',
-              line.cr != null ? line.cr : '',
-              lineIdx === 0 ? entry.narration : ''
-            ]);
-            row.height = 16;
-            row.eachCell((cell, ci) => {
-              cell.fill = fill; cell.font = normFont; cell.border = border;
-              if (ci === 3) cell.alignment = { horizontal: 'left', vertical: 'middle' };
-              else if (ci >= 4 && ci <= 5) { cell.numFmt = numFmt; cell.alignment = { horizontal: 'right', vertical: 'middle' }; }
-              else if (ci === 6) cell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: true };
-              else cell.alignment = { horizontal: 'left', vertical: 'middle' };
-            });
-            leRowIdx++;
-          });
-
-          // Totals per entry
-          const drTotal = entry.lines.reduce((s, l) => s + (l.dr || 0), 0);
-          const totFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + CLR.total } };
-          const totRow  = wsje.addRow(['', 'Total', '', Utils.round2(drTotal), Utils.round2(drTotal), '']);
-          totRow.height = 15;
-          totRow.eachCell((cell, ci) => {
-            cell.fill = totFill; cell.font = boldFont; cell.border = border;
-            if (ci >= 4 && ci <= 5) { cell.numFmt = numFmt; cell.alignment = { horizontal: 'right', vertical: 'middle' }; }
-            else cell.alignment = { horizontal: 'left', vertical: 'middle' };
-          });
-          // Store ref: wsje.rowCount = row number of this Total row
-          jeRefMap[lIdx].fyMap[fyBlock.fy][entry.label] = { sheet: safeName, drCell: 'D' + wsje.rowCount, crCell: 'E' + wsje.rowCount };
-        });
-      });
-
-      wsje.columns = [{ width: 14 }, { width: 26 }, { width: 38 }, { width: 16 }, { width: 16 }, { width: 44 }];
-    });
-
-    
+    /* Per-lease Amortisation and per-lease Journal Entry sheets omitted.
+       The consolidated Excel export only generates the four consolidated sheets:
+       Portfolio Summary, Consolidated FY Summary, Consolidated Journal Entries, Consolidated JE.
+       This avoids hitting Excel's sheet limit with large portfolios (40+ leases). */
     /* Consolidated JE by Entry Type - using fyJournals as single source of truth */
     const allFYs2 = [...new Set(portfolio.flatMap(l => (l.state.fyJournals||[]).map(f=>f.fy)))].sort();
     const JE_TYPES2 = ['Initial Recognition','Interest Accrual','Lease Payment','Depreciation of ROU Asset'];
