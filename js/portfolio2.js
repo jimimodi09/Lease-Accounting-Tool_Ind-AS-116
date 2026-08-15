@@ -1,11 +1,11 @@
-/* â� Rs.â� Rs. portfolio.js  -  Portfolio Consolidation Module â� Rs.â� Rs. */
+/* â� Rs.â� Rs. portfolio.js  -  Portfolio Consolidation Module â� Rs.â� Rs. */
 'use strict';
 
 const Portfolio = (() => {
 
-  /* â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.
+  /* â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.
      EXPORT JSON   -   Save entire portfolio to a .json file
-  â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs. */
+  â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs. */
   const exportJSON = (portfolio) => {
     if (!portfolio || portfolio.length === 0) {
       alert('No leases in portfolio to export. Save at least one lease first.');
@@ -27,10 +27,10 @@ const Portfolio = (() => {
     URL.revokeObjectURL(url);
   };
 
-  /* â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.
+  /* â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.
      IMPORT JSON   -   Load portfolio from a .json file
      callback(leases) called with parsed array on success
-  â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs. */
+  â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs. */
   const importJSON = (callback) => {
     const input = document.createElement('input');
     input.type  = 'file';
@@ -69,9 +69,9 @@ const Portfolio = (() => {
     input.click();
   };
 
-  /* â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.
+  /* â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.
      BUILD CONSOLIDATED   -   Aggregate all leases by FY
-  â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs. */
+  â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs. */
   const buildConsolidated = (portfolio) => {
     if (!portfolio || portfolio.length === 0) return null;
 
@@ -131,9 +131,9 @@ const Portfolio = (() => {
     };
   };
 
-  /* â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.
+  /* â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.
      RENDER CONSOLIDATED VIEW   -   Populate #consolidatedView
-  â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs. */
+  â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs. */
   const renderConsolidatedView = (portfolio) => {
     const container = document.getElementById('consolidatedView');
     if (!container) return;
@@ -239,9 +239,9 @@ const Portfolio = (() => {
       </div>`;
   };
 
-  /* â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.
+  /* â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.
      EXPORT CONSOLIDATED EXCEL   -   Multi-sheet ExcelJS workbook
-  â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs. */
+  â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs.â� Rs. */
   const exportConsolidatedExcel = async (portfolio) => {
     if (!portfolio || portfolio.length === 0) {
       alert('No leases in portfolio. Save at least one lease first.');
@@ -258,7 +258,7 @@ const Portfolio = (() => {
     wb.created    = new Date();
     wb.properties.date1904 = false;
 
-    // â� Rs.â� Rs. Color palette â� Rs.â� Rs.
+    // â� Rs.â� Rs. Color palette â� Rs.â� Rs.
     const CLR = { header: '1E3A5F', subHeader: '2D6A9F', accent: '4F81BD', total: 'D6E4F0', white: 'FFFFFF', light: 'EBF5FB', border: 'B0C4DE' };
     const headerFill  = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + CLR.header } };
     const subFill     = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + CLR.subHeader } };
@@ -281,9 +281,9 @@ const Portfolio = (() => {
       });
     };
 
-    /* â� Rs.â� Rs. SHEET 1: Portfolio Summary â� Rs.â� Rs. */
+    /* â� Rs.â� Rs. SHEET 1: Portfolio Summary â� Rs.â� Rs. */
     const ws1 = wb.addWorksheet('Portfolio Summary', { views: [{ state: 'frozen', ySplit: 5 }] });
-    ws1.mergeCells('A1:I1');
+    ws1.mergeCells('A1:K1');
     const t1 = ws1.getCell('A1');
     t1.value = 'Ind AS 116  -  Consolidated Lease Portfolio Summary';
     t1.font  = { name: 'Calibri', bold: true, size: 14, color: { argb: 'FF' + CLR.white } };
@@ -291,7 +291,7 @@ const Portfolio = (() => {
     t1.alignment = { horizontal: 'center', vertical: 'middle' };
     ws1.getRow(1).height = 32;
 
-    ws1.mergeCells('A2:I2');
+    ws1.mergeCells('A2:K2');
     const t2 = ws1.getCell('A2');
     t2.value = `Generated: ${new Date().toLocaleString('en-IN')}  |  Prepared by: CA Jimi R Modi  |  Leases: ${portfolio.length}`;
     t2.font  = { name: 'Calibri', italic: true, size: 9, color: { argb: 'FF4A4A4A' } };
@@ -321,13 +321,27 @@ const Portfolio = (() => {
     ws1.getRow(4).height = 22;
 
     // Individual lease table headers
-    const s1Headers = ['Lease Name','Start Date','End Date','Term (months)','IBR (%)','Lease Liability (PV) Rs.','ROU Asset Rs.','Total Interest Rs.','Total Payments Rs.'];
+    const s1Headers = ['Lease Name','Start Date','End Date','Term (months)','IBR (%)','Escalation Rate','Escalation Frequency','Lease Liability (PV) Rs.','ROU Asset Rs.','Total Interest Rs.','Total Payments Rs.'];
     const s1Row = ws1.addRow(s1Headers);
     s1Row.height = 20;
     s1Row.eachCell((cell, i) => {
       cell.fill = headerFill; cell.font = hFont; cell.border = border;
       cell.alignment = { horizontal: i === 1 ? 'left' : 'center', vertical: 'middle' };
     });
+
+    // Escalation display helpers
+    const getEscRate = (inp) => {
+      if (!inp.hasVarPayments || !inp.escalationRate) return 'Nil';
+      return inp.escalationType === 'percent'
+        ? inp.escalationRate + '%'
+        : 'Rs. ' + inp.escalationRate + ' (Fixed)';
+    };
+    const getEscFreq = (inp) => {
+      if (!inp.hasVarPayments || !inp.escalationRate) return 'Nil';
+      if (String(inp.escalationFreq) === 'custom') return 'Every ' + inp.escalationCustom + 'm';
+      const freqMap = { '6': 'Every 6 Months', '12': 'Annual', '24': 'Bi-Annual', '36': 'Tri-Annual' };
+      return freqMap[String(inp.escalationFreq)] || ('Every ' + inp.escalationFreq + 'm');
+    };
 
     portfolio.forEach((l, idx) => {
       const s = l.state;
@@ -337,6 +351,8 @@ const Portfolio = (() => {
         Utils.fmtDate(new Date(s.inputs.endDate)),
         s.inputs.leaseTerm,
         s.inputs.roi,
+        getEscRate(s.inputs),
+        getEscFreq(s.inputs),
         s.pvResult.totalPV,
         s.inputs.rouInitial,
         s.inputs.totalInterest,
@@ -346,23 +362,24 @@ const Portfolio = (() => {
       const fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: idx % 2 === 0 ? 'FFF5F9FF' : 'FFFFFFFF' } };
       row.eachCell((cell, ci) => {
         cell.fill = fill; cell.font = normFont; cell.border = border;
-        cell.alignment = { horizontal: ci === 1 ? 'left' : ci <= 3 ? 'center' : 'right', vertical: 'middle' };
-        if (ci >= 6) cell.numFmt = numFmt;
+        if (ci === 1)      cell.alignment = { horizontal: 'left',   vertical: 'middle' };
+        else if (ci <= 7)  cell.alignment = { horizontal: 'center', vertical: 'middle' };
+        else             { cell.alignment = { horizontal: 'right',  vertical: 'middle' }; cell.numFmt = numFmt; }
       });
     });
 
-    // Totals row
-    const totRow = ws1.addRow(['Portfolio Total', '', '', '', '', c.totalPV, c.totalROU, c.totalInterest, c.totalPayments]);
+    // Totals row (escalation cols left blank)
+    const totRow = ws1.addRow(['Portfolio Total', '', '', '', '', '', '', c.totalPV, c.totalROU, c.totalInterest, c.totalPayments]);
     totRow.height = 20;
     totRow.eachCell((cell, ci) => {
       cell.fill = totalFill; cell.font = boldFont; cell.border = border;
       cell.alignment = { horizontal: ci === 1 ? 'left' : 'right', vertical: 'middle' };
-      if (ci >= 6) cell.numFmt = numFmt;
+      if (ci >= 8) cell.numFmt = numFmt;
     });
 
-    ws1.columns = [{ width: 32 }, { width: 14 }, { width: 14 }, { width: 14 }, { width: 10 }, { width: 20 }, { width: 18 }, { width: 18 }, { width: 18 }];
+    ws1.columns = [{ width: 32 }, { width: 14 }, { width: 14 }, { width: 14 }, { width: 10 }, { width: 18 }, { width: 22 }, { width: 22 }, { width: 18 }, { width: 18 }, { width: 18 }];
 
-    /* â� Rs.â� Rs. SHEET 2: Consolidated FY Summary â� Rs.â� Rs. */
+    /* â� Rs.â� Rs. SHEET 2: Consolidated FY Summary â� Rs.â� Rs. */
     const ws2 = wb.addWorksheet('Consolidated FY Summary', { views: [{ state: 'frozen', ySplit: 3 }] });
     ws2.mergeCells('A1:I1');
     const t3 = ws2.getCell('A1');
@@ -406,7 +423,7 @@ const Portfolio = (() => {
 
     ws2.columns = [{ width: 16 }, { width: 18 }, { width: 18 }, { width: 16 }, { width: 18 }, { width: 16 }, { width: 20 }, { width: 16 }, { width: 18 }];
 
-    /* â� Rs.â� Rs. SHEET 3: Consolidated Journal Entries â� Rs.â� Rs. */
+    /* â� Rs.â� Rs. SHEET 3: Consolidated Journal Entries â� Rs.â� Rs. */
     const wje = wb.addWorksheet('Consolidated Journal Entries', { views: [{ state: 'frozen', ySplit: 3 }] });
     wje.mergeCells('A1:G1');
     const tje = wje.getCell('A1');
@@ -656,13 +673,89 @@ const Portfolio = (() => {
       wsByType.addRow([]); wsByType.addRow([]);
     }); // end allFYs2.forEach
     wsByType.columns = ledgerCols;
-/* â� Rs.â� Rs. Write and download â� Rs.â� Rs. */
+
+    /* ── SHEET: Disclaimer ── */
+    const wsDis = wb.addWorksheet('Disclaimer', { tabColor: { argb: 'FF7B341E' } });
+    wsDis.columns = [{ width: 115 }];
+
+    // Title bar
+    const disTitle = wsDis.addRow(['DISCLAIMER & TERMS OF USE']);
+    disTitle.height = 30;
+    const disTCell = disTitle.getCell(1);
+    disTCell.font      = { name: 'Calibri', bold: true, size: 14, color: { argb: 'FFFFFFFF' } };
+    disTCell.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF7B341E' } };
+    disTCell.alignment = { vertical: 'middle', horizontal: 'left' };
+
+    // Sub-title bar
+    const disSub = wsDis.addRow(['Ind AS 116 Lease Accounting Tool  |  CA Jimi R Modi — Practicing Chartered Accountant']);
+    disSub.height = 18;
+    const disSCell = disSub.getCell(1);
+    disSCell.font      = { name: 'Calibri', size: 9, italic: true, color: { argb: 'FFFFFFFF' } };
+    disSCell.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + CLR.subHeader } };
+    disSCell.alignment = { vertical: 'middle', horizontal: 'left' };
+
+    wsDis.addRow([]);
+
+    // Warning banner
+    const disWarn = wsDis.addRow(['⚠  IMPORTANT: Please read this disclaimer carefully before using this tool. Use of this tool constitutes your acceptance of the following terms and conditions.']);
+    disWarn.height = 28;
+    const disWCell = disWarn.getCell(1);
+    disWCell.font      = { name: 'Calibri', bold: true, size: 10, color: { argb: 'FF92400E' } };
+    disWCell.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFF8E1' } };
+    disWCell.border    = { left: { style: 'thick', color: { argb: 'FFF59E0B' } } };
+    disWCell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
+
+    wsDis.addRow([]);
+
+    const DISC_CLAUSES = [
+      ['1. General Purpose',
+       'This Lease Accounting Tool has been developed by CA Jimi R Modi, Practicing Chartered Accountant, solely for general guidance and educational reference purposes in relation to the accounting treatment of leases under Indian Accounting Standard 116 (Ind AS 116). The Tool is intended to assist users in understanding and performing preliminary lease accounting computations only.'],
+      ['2. Not a Substitute for Professional Advice',
+       'The outputs generated by this Tool do not constitute professional accounting, legal, financial, or tax advice. Every lease arrangement has unique facts and circumstances. Users are strongly advised to consult a qualified Chartered Accountant or appropriate professional before making any accounting decisions, financial disclosures, or regulatory filings based on the results of this Tool.'],
+      ['3. Limitation of Liability',
+       'CA Jimi R Modi, and any associates or contributors, shall not be held liable for any direct, indirect, incidental, consequential, or special loss or damage arising out of or in connection with the use of, or reliance upon, the information or computations generated by this Tool, including but not limited to errors, omissions, inaccuracies, or misinterpretation of Ind AS 116 provisions.'],
+      ['4. User Responsibility',
+       'The user assumes full and sole responsibility for verifying the accuracy of all inputs entered into the Tool and for validating all outputs against applicable standards, notifications, and circulars issued by the Ministry of Corporate Affairs (MCA) and any other relevant regulatory authority. The user is solely responsible for all decisions made based on results generated by this Tool.'],
+      ['5. Accuracy & Updates',
+       'While reasonable care has been taken in designing this Tool based on the provisions of Ind AS 116 as currently in force, no warranty or representation, express or implied, is made as to the completeness, accuracy, reliability, suitability, or availability of the Tool or the computations it generates. Accounting standards may be subject to amendments and the Tool may not reflect such subsequent changes.'],
+      ['6. No Client-Professional Relationship',
+       'Use of this Tool does not create or imply any client-professional relationship between the user and CA Jimi R Modi. The outputs of this Tool shall not be construed as an opinion, certification, or attestation by CA Jimi R Modi in any professional capacity.'],
+      ['7. Intellectual Property',
+       'This Tool, including its design, logic, and structure, is the intellectual property of CA Jimi R Modi. Reproduction, redistribution, or commercial use of this Tool without prior written permission is strictly prohibited.'],
+    ];
+
+    DISC_CLAUSES.forEach(([heading, body], idx) => {
+      const hRow = wsDis.addRow([heading]);
+      hRow.height = 20;
+      const hCell = hRow.getCell(1);
+      hCell.font      = { name: 'Calibri', bold: true, size: 10, color: { argb: 'FFFFFFFF' } };
+      hCell.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + CLR.header } };
+      hCell.alignment = { vertical: 'middle', horizontal: 'left' };
+
+      const bRow = wsDis.addRow([body]);
+      bRow.height = 54;
+      const bCell = bRow.getCell(1);
+      bCell.font      = { name: 'Calibri', size: 10, color: { argb: 'FF334155' } };
+      bCell.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: idx % 2 === 0 ? 'FFF5F9FF' : 'FFFFFFFF' } };
+      bCell.alignment = { vertical: 'top', horizontal: 'left', wrapText: true };
+
+      wsDis.addRow([]);
+    });
+
+    // Footer bar
+    const disFoot = wsDis.addRow(['© CA Jimi R Modi — Practicing Chartered Accountant  |  Ind AS 116 Lease Accounting Tool']);
+    const disFCell = disFoot.getCell(1);
+    disFCell.font      = { name: 'Calibri', bold: true, size: 10, color: { argb: 'FFFFFFFF' } };
+    disFCell.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + CLR.subHeader } };
+    disFCell.alignment = { vertical: 'middle', horizontal: 'center' };
+
+/* â� Rs.â� Rs. Write and download â� Rs.â� Rs. */
     const buf  = await wb.xlsx.writeBuffer();
     const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
     saveAs(blob, `ConsolidatedPortfolio_${_today()}.xlsx`);
   };
 
-  /* â� Rs.â� Rs. Helper â� Rs.â� Rs. */
+  /* â� Rs.â� Rs. Helper â� Rs.â� Rs. */
   const _today = () => {
     const d = new Date();
     return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;

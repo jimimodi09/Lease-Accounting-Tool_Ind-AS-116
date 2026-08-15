@@ -551,6 +551,53 @@
     Portfolio.renderConsolidatedView(_portfolio);
   }
 
+  /* ── Populate all Inputs-tab form fields from a saved state ── */
+  function populateInputsFromState(inp) {
+    const setField  = (id, val) => { const el = document.getElementById(id); if (el && val != null) el.value = val; };
+    const setSelect = (id, val) => { const el = document.getElementById(id); if (el && val != null) el.value = String(val); };
+    const setDate   = (id, str) => {
+      const el = document.getElementById(id);
+      if (!el || !str) return;
+      if (el._flatpickr) el._flatpickr.setDate(str, true, 'd-m-Y');
+      else el.value = str;
+    };
+
+    // Core inputs
+    setField('leaseName',          inp.leaseName || '');
+    setField('paymentAmount',      inp.paymentAmount != null ? inp.paymentAmount : '');
+    setField('roi',                inp.roi         != null ? inp.roi           : '');
+    setField('leaseTerm',          inp.leaseTerm   || '');
+    setField('initialDirectCosts', inp.initialDirectCosts != null ? inp.initialDirectCosts : 0);
+    setField('leaseIncentives',    inp.leaseIncentives   != null ? inp.leaseIncentives   : 0);
+    setField('restorationCosts',   inp.restorationCosts  != null ? inp.restorationCosts  : 0);
+    setField('residualValue',      inp.residualValue     != null ? inp.residualValue     : 0);
+
+    // Select inputs
+    setSelect('frequency',     inp.frequency);
+    setSelect('paymentTiming', inp.paymentTiming);
+    setSelect('fyStart',       inp.fyStartMonth);
+
+    // Date pickers (flatpickr-aware)
+    setDate('leaseStart', inp.leaseStart);
+    setDate('leaseEnd',   inp.leaseEnd);
+
+    // Escalation fields
+    const custGrp = document.getElementById('escalationCustomGroup');
+    if (inp.hasVarPayments && inp.escalationRate) {
+      setField('escalationRate', inp.escalationRate);
+      setSelect('escalationType', inp.escalationType || 'percent');
+      const freqVal = String(inp.escalationFreq || '12');
+      setSelect('escalationFreq', freqVal);
+      const isCustom = freqVal === 'custom';
+      if (custGrp) custGrp.style.display = isCustom ? '' : 'none';
+      if (isCustom && inp.escalationCustom) setField('escalationCustomMonths', inp.escalationCustom);
+    } else {
+      if (custGrp) custGrp.style.display = 'none';
+    }
+
+    syncTermYears();
+  }
+
   window._portfolioLoad = (id) => {
     const item = _portfolio.find(l => l.id === id);
     if (!item) return;
@@ -560,6 +607,10 @@
     s.amortRows.forEach(r => r.date = new Date(r.date));
     s.pvResult.schedule.forEach(r => r.date = new Date(r.date));
     _state = s;
+
+    // Populate Inputs tab with the loaded lease data
+    populateInputsFromState(s.inputs);
+
     renderAll(_state);
     _auditTrail.unshift({ ts: new Date().toLocaleString('en-IN'), summary: `Loaded: ${item.label}` });
     switchTab('summary');
