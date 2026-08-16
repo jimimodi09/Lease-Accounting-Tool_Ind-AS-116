@@ -348,64 +348,27 @@ const Portfolio = (() => {
       const freqMap = { '6': 'Every 6 Months', '12': 'Annual', '24': 'Bi-Annual', '36': 'Tri-Annual' };
       return freqMap[String(inp.escalationFreq)] || ('Every ' + inp.escalationFreq + 'm');
     };
-
-    portfolio.forEach((l, idx) => {
-      const s = l.savedState || l.state;
-      if (!s || !s.inputs) return;
-      const row = ws1.addRow([
-        l.label,
-        Utils.fmtDate(new Date(s.inputs.startDate)),
-        Utils.fmtDate(new Date(s.inputs.endDate)),
-        s.inputs.leaseTerm,
-        s.inputs.roi,
-        getEscRate(s.inputs),
-        getEscFreq(s.inputs),
-        (s.pvResult && s.pvResult.totalPV) || 0,
-        s.inputs.rouInitial,
-        s.inputs.totalInterest,
-        s.inputs.totalPayments
-      ]);
-      row.height = 18;
-      const fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: idx % 2 === 0 ? 'FFF5F9FF' : 'FFFFFFFF' } };
-      row.eachCell((cell, ci) => {
-        cell.fill = fill; cell.font = normFont; cell.border = border;
-        if (ci === 1)      cell.alignment = { horizontal: 'left',   vertical: 'middle' };
-        else if (ci <= 7)  cell.alignment = { horizontal: 'center', vertical: 'middle' };
-        else             { cell.alignment = { horizontal: 'right',  vertical: 'middle' }; cell.numFmt = numFmt; }
-      });
-    });
-
-    // Totals row (escalation cols left blank)
-    const totRow = ws1.addRow(['Portfolio Total', '', '', '', '', '', '', c.totalPV, c.totalROU, c.totalInterest, c.totalPayments]);
-    totRow.height = 20;
-    totRow.eachCell((cell, ci) => {
-      cell.fill = totalFill; cell.font = boldFont; cell.border = border;
-      cell.alignment = { horizontal: ci === 1 ? 'left' : 'right', vertical: 'middle' };
-      if (ci >= 8) cell.numFmt = numFmt;
-    });
-
-    ws1.columns = [{ width: 32 }, { width: 14 }, { width: 14 }, { width: 14 }, { width: 10 }, { width: 18 }, { width: 22 }, { width: 22 }, { width: 18 }, { width: 18 }, { width: 18 }];
-
-    /* â� Rs.â� Rs. SHEET 2: Consolidated FY Summary â� Rs.â� Rs. */
+  /* ── SHEET 2: Consolidated FY Summary ── */
     const ws2 = wb.addWorksheet('Consolidated FY Summary', { views: [{ state: 'frozen', ySplit: 3 }] });
-    ws2.mergeCells('A1:I1');
+    ws2.mergeCells('A1:J1');
     const t3 = ws2.getCell('A1');
     t3.value = 'Ind AS 116  -  Consolidated FY-wise Lease Summary (All Leases)';
     t3.font  = { name: 'Calibri', bold: true, size: 13, color: { argb: 'FF' + CLR.white } };
     t3.fill  = headerFill; t3.alignment = { horizontal: 'center', vertical: 'middle' };
     ws2.getRow(1).height = 28;
 
-    ws2.mergeCells('A2:I2');
+    ws2.mergeCells('A2:J2');
     const t4 = ws2.getCell('A2');
     t4.value = `Aggregated across ${portfolio.length} lease(s)  |  Generated: ${new Date().toLocaleString('en-IN')}`;
     t4.font  = { name: 'Calibri', italic: true, size: 9 }; t4.fill = lightFill; t4.alignment = { horizontal: 'center' };
 
-    const s2Headers = ['Financial Year','Opening Liability Rs.','Interest Accrued Rs.','Payments Rs.','Closing Liability Rs.','Current Portion Rs.','Non-Current Portion Rs.','Depreciation Rs.','ROU Book Value Rs.'];
+    // Column order: FY | Opening | New Leases | Interest | Payments | Closing | Current | Non-Current | Dep | ROU BV
+    const s2Headers = ['Financial Year','Opening Liability Rs.','New Leases Recognized Rs.','Interest Accrued Rs.','Payments Rs.','Closing Liability Rs.','Current Portion Rs.','Non-Current Portion Rs.','Depreciation Rs.','ROU Book Value Rs.'];
     const s2HRow = ws2.addRow(s2Headers);
     s2HRow.height = 20;
     s2HRow.eachCell((cell, i) => {
       cell.fill = headerFill; cell.font = hFont; cell.border = border;
-      cell.alignment = { horizontal: i === 1 ? 'left' : 'center', vertical: 'middle' };
+      cell.alignment = { horizontal: i === 1 ? 'left' : 'center', vertical: 'middle', wrapText: true };
     });
 
     c.fySummary.forEach((r, idx) => {
