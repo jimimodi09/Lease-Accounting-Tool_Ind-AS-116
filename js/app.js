@@ -360,6 +360,40 @@
     };
   }
 
+  /* ── Shared save logic — called by Compute (auto-save) and Save button ── */
+  function _saveCurrentLease(silent = false) {
+    if (!_state) return;
+    const label = _state.leaseName || ('Lease ' + (_portfolio.length + 1));
+    const frozenState = JSON.parse(JSON.stringify(_state));
+
+    if (_loadedLeaseId !== null) {
+      const idx = _portfolio.findIndex(l => l.id === _loadedLeaseId);
+      if (idx >= 0) {
+        _portfolio[idx].label      = label;
+        _portfolio[idx].savedState = frozenState;
+      } else {
+        _loadedLeaseId = Date.now();
+        _portfolio.push({ id: _loadedLeaseId, label, savedState: frozenState });
+      }
+    } else {
+      const byLabel = _portfolio.findIndex(l => l.label === label);
+      if (byLabel >= 0) {
+        _portfolio[byLabel].savedState = frozenState;
+        _loadedLeaseId = _portfolio[byLabel].id;
+      } else {
+        _loadedLeaseId = Date.now();
+        _portfolio.push({ id: _loadedLeaseId, label, savedState: frozenState });
+      }
+    }
+    renderPortfolio();
+    // Always keep Portfolio Disclosure in sync
+    if (typeof PortfolioDisclosure !== 'undefined') PortfolioDisclosure.render(_portfolio);
+    if (!silent) {
+      _auditTrail.unshift({ ts: new Date().toLocaleString('en-IN'), summary: `Saved: ${label}` });
+      alert(`"${label}" saved to portfolio.`);
+    }
+  }
+
   function compute(isReactive = false) {
     hideError();
     try {
@@ -388,8 +422,6 @@
         escalationFreq: inp.escalationFreq, escalationCustom: inp.escalationCustom
       };
 
-      // _state holds the working result for the CURRENT on-screen lease only
-      // It does NOT automatically update _portfolio savedState
       _state = { inputs, pvResult, amortRows, rouRows, fySummary, fyJournals, leaseName: inp.leaseName };
 
       if (isReactive !== true) {
@@ -397,6 +429,8 @@
           ts: new Date().toLocaleString('en-IN'),
           summary: `Computed: ${inp.leaseName || 'Lease'} | ${inp.leaseTerm}m | IBR ${inp.roi}% | Liability ₹${Utils.fmtNum(pvResult.totalPV)} | ROU ₹${Utils.fmtNum(rouInitial)}${_varPayments ? ' [Escalation]' : ''}`
         });
+        // Auto-save to portfolio on every compute (silent — no popup)
+        _saveCurrentLease(true);
       }
 
       renderAll(_state);
@@ -468,43 +502,7 @@
    */
   document.getElementById('saveLeaseBtn').addEventListener('click', () => {
     if (!_state) { alert('Compute a lease first.'); return; }
-
-    const label = _state.leaseName || ('Lease ' + (_portfolio.length + 1));
-
-    // Deep-clone the current working state — this becomes the frozen savedState
-    const frozenState = JSON.parse(JSON.stringify(_state));
-
-    if (_loadedLeaseId !== null) {
-      // Update the specific lease that was loaded (ID-based — immune to label changes)
-      const idx = _portfolio.findIndex(l => l.id === _loadedLeaseId);
-      if (idx >= 0) {
-        _portfolio[idx].label      = label;       // allow rename
-        _portfolio[idx].savedState = frozenState;
-      } else {
-        // ID no longer found (shouldn't happen), treat as new
-        _loadedLeaseId = Date.now();
-        _portfolio.push({ id: _loadedLeaseId, label, savedState: frozenState });
-      }
-    } else {
-      // New lease — check for label collision as a secondary guard
-      const byLabel = _portfolio.findIndex(l => l.label === label);
-      if (byLabel >= 0) {
-        _portfolio[byLabel].savedState = frozenState;
-        _loadedLeaseId = _portfolio[byLabel].id;
-      } else {
-        _loadedLeaseId = Date.now();
-        _portfolio.push({ id: _loadedLeaseId, label, savedState: frozenState });
-      }
-    }
-
-    _auditTrail.unshift({ ts: new Date().toLocaleString('en-IN'), summary: `Saved: ${label}` });
-    renderPortfolio();
-    // Refresh portfolio disclosure if it's currently active
-    const activeTab = document.querySelector('.nav-tab.active');
-    if (activeTab && activeTab.dataset.tab === 'port-disclosure') {
-      PortfolioDisclosure.render(_portfolio);
-    }
-    alert(`"${label}" saved to portfolio.`);
+    _saveCurrentLease(false);  // show confirmation popup
   });
 
   document.getElementById('newLeaseBtn').addEventListener('click', () => {

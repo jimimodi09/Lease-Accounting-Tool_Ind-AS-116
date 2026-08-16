@@ -681,6 +681,311 @@ const Portfolio = (() => {
     }); // end allFYs2.forEach
     wsByType.columns = ledgerCols;
 
+    /* ── SHEET: Portfolio Disclosure (Ind AS 116 Notes to Accounts) ── */
+    const wsDisc = wb.addWorksheet('Portfolio Disclosure', { tabColor: { argb: 'FF1E3A5F' }, views: [{ state: 'frozen', ySplit: 2 }] });
+    wsDisc.columns = [{ width: 52 }, { width: 18 }, { width: 18 }, { width: 18 }, { width: 18 }, { width: 18 }, { width: 18 }, { width: 18 }, { width: 18 }];
+
+    const discHeaderFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E3A5F' } };
+    const discSubFill    = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2D6A9F' } };
+    const discTotFill    = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE8F4FD' } };
+    const discEvenFill   = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF5F9FF' } };
+    const discOddFill    = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFFFF' } };
+    const wFont  = { name: 'Calibri', size: 10, color: { argb: 'FFFFFFFF' }, bold: true };
+    const nFont  = { name: 'Calibri', size: 10 };
+    const bFont  = { name: 'Calibri', size: 10, bold: true };
+    const discBorder = { top: { style: 'thin', color: { argb: 'FFD1D5DB' } }, left: { style: 'thin', color: { argb: 'FFD1D5DB' } }, bottom: { style: 'thin', color: { argb: 'FFD1D5DB' } }, right: { style: 'thin', color: { argb: 'FFD1D5DB' } } };
+
+    const addDiscTitle = (ws, text, mergeCols = 9) => {
+      const rIdx = ws.rowCount + 1;
+      ws.mergeCells(rIdx, 1, rIdx, mergeCols);
+      const r = ws.getRow(rIdx); r.height = 28;
+      const c = ws.getCell(rIdx, 1);
+      c.value = text; c.font = { name: 'Calibri', size: 13, bold: true, color: { argb: 'FFFFFFFF' } };
+      c.fill = discHeaderFill; c.alignment = { horizontal: 'center', vertical: 'middle' };
+    };
+    const addDiscSection = (ws, text, level = 1, mergeCols = 9) => {
+      const fills = { 1: 'FF1E3A5F', 2: 'FF2D6A9F', 3: 'FF3A7BD5' };
+      const rIdx = ws.rowCount + 1;
+      ws.mergeCells(rIdx, 1, rIdx, mergeCols);
+      const r = ws.getRow(rIdx); r.height = 20;
+      const c = ws.getCell(rIdx, 1);
+      c.value = text; c.font = { name: 'Calibri', size: level === 1 ? 11 : 10, bold: true, color: { argb: 'FFFFFFFF' } };
+      c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + (fills[level] || fills[1]).slice(2) } };
+      c.alignment = { horizontal: 'left', vertical: 'middle' };
+    };
+    const addDiscSubhead = (ws, text, mergeCols = 9) => {
+      const rIdx = ws.rowCount + 1;
+      ws.mergeCells(rIdx, 1, rIdx, mergeCols);
+      const r = ws.getRow(rIdx); r.height = 18;
+      const c = ws.getCell(rIdx, 1);
+      c.value = text; c.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FF1E3A5F' } };
+      c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE8F4FD' } };
+      c.alignment = { horizontal: 'left', vertical: 'middle' };
+    };
+
+    // Helpers
+    const allFYs_disc = [...new Set(portfolio.flatMap(l => {
+      const ss = l.savedState || l.state; return (ss && ss.fySummary || []).map(r => r.fy);
+    }))].sort();
+    const consol_disc = (() => {
+      const fields = ['openBal','interest','payments','closeBal','currentLiab','nonCurrentLiab','dep','rouCloseBV'];
+      const fyMap = {};
+      portfolio.forEach(l => {
+        const ss = l.savedState || l.state;
+        (ss && ss.fySummary || []).forEach(row => {
+          if (!fyMap[row.fy]) fyMap[row.fy] = { fy: row.fy, openBal:0, interest:0, payments:0, closeBal:0, currentLiab:0, nonCurrentLiab:0, dep:0, rouCloseBV:0 };
+          fields.forEach(f => { fyMap[row.fy][f] = Utils.round2((fyMap[row.fy][f] || 0) + (row[f] || 0)); });
+        });
+      });
+      return Object.values(fyMap).sort((a, b) => a.fy < b.fy ? -1 : 1);
+    })();
+    const totPV   = Utils.round2(portfolio.reduce((s, l) => { const ss = l.savedState || l.state; return s + ((ss && ss.pvResult) ? ss.pvResult.totalPV : 0); }, 0));
+    const totROU  = Utils.round2(portfolio.reduce((s, l) => { const ss = l.savedState || l.state; return s + ((ss && ss.inputs) ? ss.inputs.rouInitial : 0); }, 0));
+    const totInt  = Utils.round2(portfolio.reduce((s, l) => { const ss = l.savedState || l.state; return s + ((ss && ss.inputs) ? ss.inputs.totalInterest : 0); }, 0));
+    const totPmt  = Utils.round2(portfolio.reduce((s, l) => { const ss = l.savedState || l.state; return s + ((ss && ss.inputs) ? ss.inputs.totalPayments : 0); }, 0));
+    const totDep  = Utils.round2(portfolio.reduce((s, l) => { const ss = l.savedState || l.state; return s + ((ss && ss.inputs) ? ss.inputs.totalDep : 0); }, 0));
+
+    // Title row
+    addDiscTitle(wsDisc, 'Ind AS 116 \u2013 Notes to Accounts: Leases (Portfolio Consolidated Disclosure)');
+    // Meta row
+    const discMeta = wsDisc.addRow([`Consolidated across ${portfolio.length} lease(s)  |  Prepared by: CA Jimi R Modi  |  Generated: ${new Date().toLocaleDateString('en-IN')}`]);
+    wsDisc.mergeCells(wsDisc.rowCount, 1, wsDisc.rowCount, 9);
+    discMeta.height = 16; discMeta.getCell(1).font = { name: 'Calibri', size: 9, italic: true }; discMeta.getCell(1).fill = lightFill;
+
+    // KPI Summary
+    wsDisc.addRow([]);
+    const kpiHdrR = wsDisc.addRow(['Leases in Portfolio','Total Lease Liability (PV)','Total ROU Asset','Total Interest Expense','Total Cash Outflows','Total Depreciation','','','']);
+    kpiHdrR.height = 18; kpiHdrR.eachCell((c, ci) => { if (ci <= 6) { c.font = wFont; c.fill = discSubFill; c.alignment = { horizontal: 'center', vertical: 'middle' }; c.border = discBorder; } });
+    const kpiValR = wsDisc.addRow([portfolio.length, Utils.fmtINR(totPV), Utils.fmtINR(totROU), Utils.fmtINR(totInt), Utils.fmtINR(totPmt), Utils.fmtINR(totDep), '','','']);
+    kpiValR.height = 20; kpiValR.eachCell((c, ci) => { if (ci <= 6) { c.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF1E3A5F' } }; c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE8F4FD' } }; c.alignment = { horizontal: 'center', vertical: 'middle' }; c.border = discBorder; } });
+    wsDisc.addRow([]);
+
+    // Section 1: Accounting Policy (text)
+    addDiscSection(wsDisc, '1.  Accounting Policy \u2013 Leases (Ind AS 116, Paragraphs 10\u201350)', 1);
+    const policyText = [
+      'The Company assesses at contract inception whether a contract is, or contains, a lease. A contract contains a lease if it conveys the right to control the use of an identified asset for a period in exchange for consideration (Para 10\u201316).',
+      'At the commencement date, the Company recognises a right-of-use (ROU) asset and a corresponding lease liability for all leases, except short-term leases (term \u226412 months) and leases of low-value assets (Para 22).',
+      'Lease liabilities are measured at the present value of lease payments not yet paid, discounted at the incremental borrowing rate (IBR) at commencement. The ROU asset is initially measured at cost comprising: (i) the initial lease liability; (ii) lease payments at commencement; (iii) initial direct costs; (iv) restoration costs; less lease incentives received (Para 26\u201331).',
+      'Subsequent to commencement, the lease liability increases by interest accrued (effective interest method) and reduces by lease payments. The ROU asset is depreciated on a straight-line basis over the lease term (Para 36). Lease liabilities are classified as current (\u226412m) and non-current (>12m).',
+    ];
+    policyText.forEach(text => {
+      const ri = wsDisc.rowCount + 1;
+      wsDisc.mergeCells(ri, 1, ri, 9);
+      const pr = wsDisc.addRow([text]);
+      pr.height = 48; pr.getCell(1).font = nFont; pr.getCell(1).alignment = { wrapText: true, vertical: 'top', horizontal: 'left' };
+    });
+    wsDisc.addRow([]);
+
+    // Section 2: Amounts Recognised — FY-wise consolidated tables
+    addDiscSection(wsDisc, '2.  Amounts Recognised in Financial Statements (Para 52\u201353)', 1);
+
+    if (consol_disc.length > 0) {
+      const fyCount = allFYs_disc.length;
+      const totalMergeCols = 1 + fyCount;
+
+      // 2a: Lease Liability Movement
+      addDiscSubhead(wsDisc, '2(a)  Movement in Lease Liability (\u20B9)  [Para 52(a), 53(b)]', totalMergeCols);
+      const hdr2a = wsDisc.addRow(['Particulars', ...allFYs_disc]); hdr2a.height = 18;
+      hdr2a.eachCell((c, ci) => { if (ci <= totalMergeCols) { c.font = wFont; c.fill = discSubFill; c.alignment = { horizontal: ci === 1 ? 'left' : 'center', vertical: 'middle' }; c.border = discBorder; } });
+      [
+        ['Opening Lease Liability', 'openBal', false],
+        ['Add: Interest Accrued (IBR)', 'interest', false],
+        ['Less: Lease Payments Made', 'payments', false],
+        ['Closing Lease Liability', 'closeBal', true],
+        ['  \u2013 Current Portion', 'currentLiab', false],
+        ['  \u2013 Non-Current Portion', 'nonCurrentLiab', false],
+      ].forEach(([lbl, fld, isTot], ri) => {
+        const dr = wsDisc.addRow([lbl, ...consol_disc.map(r => r[fld])]);
+        dr.height = 16;
+        dr.eachCell((c, ci) => {
+          if (ci > totalMergeCols) return;
+          c.border = discBorder; c.font = isTot ? bFont : nFont;
+          c.fill = isTot ? { type:'pattern', pattern:'solid', fgColor:{argb:'FFDBEAFE'} } : (ri % 2 === 0 ? discEvenFill : discOddFill);
+          c.alignment = ci === 1 ? { horizontal:'left' } : { horizontal:'right' };
+          if (ci > 1) c.numFmt = numFmt;
+        });
+      });
+      wsDisc.addRow([]);
+
+      // 2b: ROU Asset Movement
+      addDiscSubhead(wsDisc, '2(b)  Movement in Right-of-Use Asset (\u20B9)  [Para 29\u201331, 36]', totalMergeCols);
+      const hdr2b = wsDisc.addRow(['Particulars', ...allFYs_disc]); hdr2b.height = 18;
+      hdr2b.eachCell((c, ci) => { if (ci <= totalMergeCols) { c.font = wFont; c.fill = discSubFill; c.alignment = { horizontal: ci === 1 ? 'left' : 'center', vertical: 'middle' }; c.border = discBorder; } });
+      [
+        ['Opening Book Value', consol_disc.map((r, i) => i === 0 ? totROU : consol_disc[i-1].rouCloseBV), false],
+        ['Less: Depreciation',  consol_disc.map(r => r.dep), false],
+        ['Closing Book Value',  consol_disc.map(r => r.rouCloseBV), true],
+      ].forEach(([lbl, vals, isTot], ri) => {
+        const dr = wsDisc.addRow([lbl, ...vals]);
+        dr.height = 16;
+        dr.eachCell((c, ci) => {
+          if (ci > totalMergeCols) return;
+          c.border = discBorder; c.font = isTot ? bFont : nFont;
+          c.fill = isTot ? { type:'pattern', pattern:'solid', fgColor:{argb:'FFDBEAFE'} } : (ri % 2 === 0 ? discEvenFill : discOddFill);
+          c.alignment = ci === 1 ? { horizontal:'left' } : { horizontal:'right' };
+          if (ci > 1) c.numFmt = numFmt;
+        });
+      });
+      wsDisc.addRow([]);
+
+      // 2c: P&L Impact
+      addDiscSubhead(wsDisc, '2(c)  Impact on Statement of Profit & Loss (\u20B9)  [Para 49, 53(b)]', totalMergeCols);
+      const hdr2c = wsDisc.addRow(['Particulars', ...allFYs_disc]); hdr2c.height = 18;
+      hdr2c.eachCell((c, ci) => { if (ci <= totalMergeCols) { c.font = wFont; c.fill = discSubFill; c.alignment = { horizontal: ci === 1 ? 'left' : 'center', vertical: 'middle' }; c.border = discBorder; } });
+      [
+        ['Finance Costs \u2013 Interest on Lease Liability', consol_disc.map(r => r.interest), false],
+        ['Depreciation \u2013 Right-of-Use Asset', consol_disc.map(r => r.dep), false],
+        ['Total Lease P&L Impact', consol_disc.map(r => Utils.round2(r.interest + r.dep)), true],
+      ].forEach(([lbl, vals, isTot], ri) => {
+        const dr = wsDisc.addRow([lbl, ...vals]);
+        dr.height = 16;
+        dr.eachCell((c, ci) => {
+          if (ci > totalMergeCols) return;
+          c.border = discBorder; c.font = isTot ? bFont : nFont;
+          c.fill = isTot ? { type:'pattern', pattern:'solid', fgColor:{argb:'FFDBEAFE'} } : (ri % 2 === 0 ? discEvenFill : discOddFill);
+          c.alignment = ci === 1 ? { horizontal:'left' } : { horizontal:'right' };
+          if (ci > 1) c.numFmt = numFmt;
+        });
+      });
+      wsDisc.addRow([]);
+
+      // 2d: Cash Flows
+      addDiscSubhead(wsDisc, '2(d)  Cash Outflows from Leases (\u20B9)  [Para 52(b), 54(e)]', totalMergeCols);
+      const hdr2d = wsDisc.addRow(['Particulars', ...allFYs_disc]); hdr2d.height = 18;
+      hdr2d.eachCell((c, ci) => { if (ci <= totalMergeCols) { c.font = wFont; c.fill = discSubFill; c.alignment = { horizontal: ci === 1 ? 'left' : 'center', vertical: 'middle' }; c.border = discBorder; } });
+      [
+        ['Operating \u2013 Interest Paid on Lease', consol_disc.map(r => r.interest), false],
+        ['Financing \u2013 Principal Repayment', consol_disc.map(r => Utils.round2(r.payments - r.interest)), false],
+        ['Total Cash Outflow from Leases', consol_disc.map(r => r.payments), true],
+      ].forEach(([lbl, vals, isTot], ri) => {
+        const dr = wsDisc.addRow([lbl, ...vals]);
+        dr.height = 16;
+        dr.eachCell((c, ci) => {
+          if (ci > totalMergeCols) return;
+          c.border = discBorder; c.font = isTot ? bFont : nFont;
+          c.fill = isTot ? { type:'pattern', pattern:'solid', fgColor:{argb:'FFDBEAFE'} } : (ri % 2 === 0 ? discEvenFill : discOddFill);
+          c.alignment = ci === 1 ? { horizontal:'left' } : { horizontal:'right' };
+          if (ci > 1) c.numFmt = numFmt;
+        });
+      });
+      wsDisc.addRow([]);
+    }
+
+    // Section 3: Maturity Analysis
+    addDiscSection(wsDisc, '3.  Maturity Analysis \u2013 Undiscounted Lease Payments (Para 52(b))', 1);
+    const today_disc = new Date();
+    const matBands = [
+      { label: 'Less than 1 year',  min: 0,  max: 12,       amount: 0 },
+      { label: '1 \u2013 2 years',  min: 12, max: 24,       amount: 0 },
+      { label: '2 \u2013 3 years',  min: 24, max: 36,       amount: 0 },
+      { label: '3 \u2013 5 years',  min: 36, max: 60,       amount: 0 },
+      { label: 'More than 5 years', min: 60, max: Infinity,  amount: 0 },
+    ];
+    portfolio.forEach(l => {
+      const ss = l.savedState || l.state;
+      (ss && ss.amortRows || []).forEach(row => {
+        const dt = new Date(row.date);
+        const mAway = (dt.getFullYear() - today_disc.getFullYear()) * 12 + (dt.getMonth() - today_disc.getMonth());
+        matBands.forEach(b => { if (mAway >= b.min && mAway < b.max) b.amount += (row.payment || 0); });
+      });
+    });
+    const matFiltered = matBands.map(b => ({ ...b, amount: Utils.round2(b.amount) })).filter(b => b.amount > 0);
+    const matHdr = wsDisc.addRow(['Time Band', 'Undiscounted Payments (\u20B9)']); matHdr.height = 18;
+    matHdr.eachCell((c, ci) => { if (ci <= 2) { c.font = wFont; c.fill = discSubFill; c.alignment = { horizontal: ci === 1 ? 'left' : 'center', vertical: 'middle' }; c.border = discBorder; } });
+    let matTotal = 0;
+    matFiltered.forEach((b, bi) => {
+      matTotal += b.amount;
+      const mr = wsDisc.addRow([b.label, b.amount]); mr.height = 16;
+      mr.eachCell((c, ci) => { if (ci <= 2) { c.border = discBorder; c.font = nFont; c.fill = bi % 2 === 0 ? discEvenFill : discOddFill; c.alignment = ci === 1 ? { horizontal:'left' } : { horizontal:'right' }; if (ci === 2) c.numFmt = numFmt; } });
+    });
+    const matTotR = wsDisc.addRow(['Total Undiscounted Payments', Utils.round2(matTotal)]); matTotR.height = 18;
+    matTotR.eachCell((c, ci) => { if (ci <= 2) { c.border = discBorder; c.font = bFont; c.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FFDBEAFE'} }; c.alignment = ci === 1 ? { horizontal:'left' } : { horizontal:'right' }; if (ci === 2) c.numFmt = numFmt; } });
+    wsDisc.addRow([]);
+
+    // Section 4: Key Assumptions per lease
+    addDiscSection(wsDisc, '4.  Significant Judgements & Key Assumptions (Para 60)', 1);
+    const hdr4 = wsDisc.addRow(['Lease Name', 'Period', 'Term', 'IBR', 'Frequency', 'Escalation', 'Lease Liability (PV)', 'ROU Asset', '']);
+    hdr4.height = 18;
+    hdr4.eachCell((c, ci) => { if (ci <= 8) { c.font = wFont; c.fill = discSubFill; c.alignment = { horizontal: ci === 1 ? 'left' : 'center', vertical: 'middle', wrapText: true }; c.border = discBorder; } });
+    portfolio.forEach((l, li) => {
+      const ss  = l.savedState || l.state;
+      if (!ss || !ss.inputs) return;
+      const inp = ss.inputs;
+      const pv  = ss.pvResult ? ss.pvResult.totalPV : 0;
+      const escStr = inp.hasVarPayments && inp.escalationRate ? `${inp.escalationRate}% p.a.` : 'Nil';
+      const freqLbl = { monthly:'Monthly', quarterly:'Quarterly', 'half-yearly':'Half-Yearly', yearly:'Yearly' }[inp.frequency] || inp.frequency;
+      const dr = wsDisc.addRow([l.label, `${Utils.fmtDate(new Date(inp.startDate))} \u2013 ${Utils.fmtDate(new Date(inp.endDate))}`, `${inp.leaseTerm}m`, `${inp.roi}% p.a.`, freqLbl, escStr, pv, inp.rouInitial, '']);
+      dr.height = 16;
+      dr.eachCell((c, ci) => {
+        if (ci > 8) return;
+        c.border = discBorder; c.font = nFont;
+        c.fill = li % 2 === 0 ? discEvenFill : discOddFill;
+        c.alignment = ci <= 2 ? { horizontal:'left' } : { horizontal:'center', vertical:'middle' };
+        if (ci >= 7) { c.numFmt = numFmt; c.alignment = { horizontal:'right' }; }
+      });
+    });
+    wsDisc.addRow([]);
+
+    // Section 5: Per-Lease Contribution
+    addDiscSection(wsDisc, '5.  Per-Lease Contribution to Consolidated Figures (\u20B9)', 1);
+    portfolio.forEach((l, li) => {
+      const ss = l.savedState || l.state;
+      if (!ss || !ss.inputs || !ss.fySummary || !ss.fySummary.length) return;
+      const inp = ss.inputs;
+      // Lease banner
+      const bannerIdx = wsDisc.rowCount + 1;
+      wsDisc.mergeCells(bannerIdx, 1, bannerIdx, 9);
+      const bannerR = wsDisc.addRow([`${l.label}  |  ${Utils.fmtDate(new Date(inp.startDate))} \u2013 ${Utils.fmtDate(new Date(inp.endDate))}  |  IBR ${inp.roi}%  |  PV: ${Utils.fmtINR(ss.pvResult ? ss.pvResult.totalPV : 0)}`]);
+      bannerR.height = 18; bannerR.getCell(1).font = { name:'Calibri', size:10, bold:true, color:{argb:'FFFFFFFF'} }; bannerR.getCell(1).fill = discSubFill;
+      // FY table header
+      const phdr = wsDisc.addRow(['Financial Year','Opening Liability','Interest Accrued','Payments Made','Closing Liability','Current','Non-Current','Depreciation','ROU BV']);
+      phdr.height = 17;
+      phdr.eachCell((c, ci) => { c.font = wFont; c.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FF3A7BD5'} }; c.alignment = { horizontal:'center', vertical:'middle', wrapText:true }; c.border = discBorder; });
+      ss.fySummary.forEach((row, ri) => {
+        const dr = wsDisc.addRow([row.fy, row.openBal, row.interest, row.payments, row.closeBal, row.currentLiab, row.nonCurrentLiab, row.dep, row.rouCloseBV]);
+        dr.height = 16;
+        dr.eachCell((c, ci) => {
+          c.border = discBorder; c.font = nFont;
+          c.fill = ri % 2 === 0 ? discEvenFill : discOddFill;
+          c.alignment = ci === 1 ? { horizontal:'left' } : { horizontal:'right' };
+          if (ci > 1) c.numFmt = numFmt;
+        });
+      });
+      // Lease total
+      const lTot = wsDisc.addRow(['Lease Total', '', inp.totalInterest, inp.totalPayments, '', '', '', inp.totalDep, '']);
+      lTot.height = 16;
+      lTot.eachCell((c, ci) => { c.border = discBorder; c.font = bFont; c.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FFDBEAFE'} }; c.alignment = ci === 1 ? { horizontal:'left' } : { horizontal:'right' }; if (ci > 1 && c.value) c.numFmt = numFmt; });
+      wsDisc.addRow([]);
+    });
+
+    // Grand total
+    const gtRow = wsDisc.addRow([`Portfolio Grand Total  |  Interest: ${Utils.fmtINR(totInt)}  |  Payments: ${Utils.fmtINR(totPmt)}  |  Depreciation: ${Utils.fmtINR(totDep)}`]);
+    wsDisc.mergeCells(wsDisc.rowCount, 1, wsDisc.rowCount, 9);
+    gtRow.height = 20; gtRow.getCell(1).font = { name:'Calibri', size:10, bold:true, color:{argb:'FFFFFFFF'} }; gtRow.getCell(1).fill = discHeaderFill; gtRow.getCell(1).alignment = { horizontal:'center', vertical:'middle' };
+    wsDisc.addRow([]);
+
+    // Section 6: Additional Disclosures
+    addDiscSection(wsDisc, '6.  Additional Mandatory Disclosures (Para 53\u201360)', 1);
+    const addlDisc = [
+      ['6(a) Short-term Lease Expense (Para 53(b))', 'The Company does not have any leases with a lease term of 12 months or less accounted for under the short-term lease exemption. No short-term lease expense is recognised during the period. (Nil)'],
+      ['6(b) Low-value Asset Lease Expense (Para 53(c))', 'The Company does not have any leases of low-value assets accounted for under the low-value exemption. (Nil)'],
+      ['6(c) Variable Lease Payments Not in Liability (Para 53(d))', 'There are no variable lease payments that do not depend on an index or rate excluded from the measurement of the lease liability. (Nil)'],
+      ['6(d) Income from Sub-leasing ROU Assets (Para 53(e))', 'The Company has not sub-leased any right-of-use assets during the period. (Nil)'],
+      ['6(e) Future Cash Outflows Not in Liabilities (Para 59)', 'The leases in this portfolio do not contain extension options, termination options, or residual value guarantees beyond those already included in the measurement of the respective lease liabilities.'],
+      ['6(f) Managing Liquidity Risk from Leases (Para 60)', `The Company manages liquidity risk by maintaining adequate cash reserves and committed credit facilities. The maturity profile is disclosed in Section 3 above. Portfolio covers ${portfolio.length} lease commitment${portfolio.length !== 1 ? 's' : ''}.`],
+    ];
+    addlDisc.forEach(([heading, body], idx) => {
+      const hri = wsDisc.rowCount + 1;
+      wsDisc.mergeCells(hri, 1, hri, 9);
+      const hr = wsDisc.addRow([heading]); hr.height = 18;
+      hr.getCell(1).font = { name:'Calibri', size:10, bold:true, color:{argb:'FFFFFFFF'} }; hr.getCell(1).fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FF1E3A5F'} };
+      const bri = wsDisc.rowCount + 1;
+      wsDisc.mergeCells(bri, 1, bri, 9);
+      const br = wsDisc.addRow([body]); br.height = 42;
+      br.getCell(1).font = nFont; br.getCell(1).fill = idx % 2 === 0 ? discEvenFill : discOddFill;
+      br.getCell(1).alignment = { wrapText: true, vertical: 'top', horizontal: 'left' };
+    });
+
     /* ── SHEET: Disclaimer ── */
     const wsDis = wb.addWorksheet('Disclaimer', { tabColor: { argb: 'FF7B341E' } });
     wsDis.columns = [{ width: 115 }];
