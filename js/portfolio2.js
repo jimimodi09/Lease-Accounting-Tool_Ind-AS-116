@@ -174,8 +174,7 @@ const Portfolio = (() => {
         <td>${Utils.fmtNum(r.nonCurrentLiab)}</td>
         <td>${Utils.fmtNum(r.dep)}</td>
         <td>${Utils.fmtNum(r.rouCloseBV)}</td>
-      </tr>`;
-    }).join('');
+      </tr>`).join('');
 
     // Per-lease breakdown
     const leaseRows = portfolio.map(l => {
