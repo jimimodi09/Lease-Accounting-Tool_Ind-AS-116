@@ -339,16 +339,60 @@ const Portfolio = (() => {
     const getEscRate = (inp) => {
       if (!inp.hasVarPayments || !inp.escalationRate) return 'Nil';
       return inp.escalationType === 'percent'
-        ? inp.escalationRate + '%'
-        : 'Rs. ' + inp.escalationRate + ' (Fixed)';
+        ? inp.escalationRate + '% p.a.'
+        : '\u20B9 ' + inp.escalationRate + ' (Fixed Amt)';
     };
     const getEscFreq = (inp) => {
       if (!inp.hasVarPayments || !inp.escalationRate) return 'Nil';
-      if (String(inp.escalationFreq) === 'custom') return 'Every ' + inp.escalationCustom + 'm';
-      const freqMap = { '6': 'Every 6 Months', '12': 'Annual', '24': 'Bi-Annual', '36': 'Tri-Annual' };
-      return freqMap[String(inp.escalationFreq)] || ('Every ' + inp.escalationFreq + 'm');
+      if (String(inp.escalationFreq) === 'custom') return inp.escalationCustom + ' months';
+      // Always show in months
+      return String(inp.escalationFreq) + ' months';
     };
+
+    // Individual lease data rows
+    portfolio.forEach((l, idx) => {
+      const s = l.savedState || l.state;
+      if (!s || !s.inputs) return;
+      const row = ws1.addRow([
+        l.label,
+        Utils.fmtDate(new Date(s.inputs.startDate)),
+        Utils.fmtDate(new Date(s.inputs.endDate)),
+        s.inputs.leaseTerm,
+        s.inputs.roi,
+        getEscRate(s.inputs),
+        getEscFreq(s.inputs),
+        (s.pvResult && s.pvResult.totalPV) || 0,
+        s.inputs.rouInitial,
+        s.inputs.totalInterest,
+        s.inputs.totalPayments
+      ]);
+      row.height = 18;
+      const fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: idx % 2 === 0 ? 'FFF5F9FF' : 'FFFFFFFF' } };
+      row.eachCell((cell, ci) => {
+        cell.fill = fill; cell.font = normFont; cell.border = border;
+        if (ci === 1)      cell.alignment = { horizontal: 'left',   vertical: 'middle' };
+        else if (ci <= 7)  cell.alignment = { horizontal: 'center', vertical: 'middle' };
+        else             { cell.alignment = { horizontal: 'right',  vertical: 'middle' }; cell.numFmt = numFmt; }
+      });
+    });
+
+    // Totals row (escalation cols left blank)
+    const totRow = ws1.addRow(['Portfolio Total', '', '', '', '', '', '', c.totalPV, c.totalROU, c.totalInterest, c.totalPayments]);
+    totRow.height = 20;
+    totRow.eachCell((cell, ci) => {
+      cell.fill = totalFill; cell.font = boldFont; cell.border = border;
+      cell.alignment = { horizontal: ci === 1 ? 'left' : 'right', vertical: 'middle' };
+      if (ci >= 8) cell.numFmt = numFmt;
+    });
+
+    ws1.columns = [
+      { width: 32 }, { width: 14 }, { width: 14 }, { width: 14 },
+      { width: 10 }, { width: 20 }, { width: 16 },
+      { width: 22 }, { width: 18 }, { width: 18 }, { width: 18 }
+    ];
+
   /* ── SHEET 2: Consolidated FY Summary ── */
+
     const ws2 = wb.addWorksheet('Consolidated FY Summary', { views: [{ state: 'frozen', ySplit: 3 }] });
     ws2.mergeCells('A1:J1');
     const t3 = ws2.getCell('A1');
