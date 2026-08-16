@@ -821,29 +821,58 @@ const Portfolio = (() => {
       const fyCount = allFYs_disc.length;
       const totalMergeCols = 1 + fyCount;
 
-      // 2a: Lease Liability Movement
+      // 2a: Lease Liability Movement — Opening = prior year closing, New Leases = openBal - prevClose
       addDiscSubhead(wsDisc, '2(a)  Movement in Lease Liability (\u20B9)  [Para 52(a), 53(b)]', totalMergeCols);
       const hdr2a = wsDisc.addRow(['Particulars', ...allFYs_disc]); hdr2a.height = 18;
       hdr2a.eachCell((c, ci) => { if (ci <= totalMergeCols) { c.font = wFont; c.fill = discSubFill; c.alignment = { horizontal: ci === 1 ? 'left' : 'center', vertical: 'middle' }; c.border = discBorder; } });
+
+      // Pre-compute opening (= prev closing) and newLeases per FY column
+      const disc2aOpening   = consol_disc.map((r, i) => Utils.round2(i === 0 ? 0 : consol_disc[i - 1].closeBal));
+      const disc2aNewLeases = consol_disc.map((r, i) => Utils.round2(r.openBal - (i === 0 ? 0 : consol_disc[i - 1].closeBal)));
+
+      // Rows: Opening | New Leases | Interest | Payments | Closing | Current | Non-Current
       [
-        ['Opening Lease Liability', 'openBal', false],
-        ['Add: Interest Accrued (IBR)', 'interest', false],
-        ['Less: Lease Payments Made', 'payments', false],
-        ['Closing Lease Liability', 'closeBal', true],
-        ['  \u2013 Current Portion', 'currentLiab', false],
-        ['  \u2013 Non-Current Portion', 'nonCurrentLiab', false],
-      ].forEach(([lbl, fld, isTot], ri) => {
-        const dr = wsDisc.addRow([lbl, ...consol_disc.map(r => r[fld])]);
+        ['Opening Lease Liability',                        disc2aOpening,                               false, false],
+        ['Add: New Leases Recognized during the Year',     disc2aNewLeases,                             false, true ],  // true = highlight amber
+        ['Add: Interest Accrued (IBR)',                    consol_disc.map(r => r.interest),            false, false],
+        ['Less: Lease Payments Made',                      consol_disc.map(r => r.payments),            false, false],
+        ['Closing Lease Liability',                        consol_disc.map(r => r.closeBal),            true,  false],
+        ['  \u2013 Current Portion',                      consol_disc.map(r => r.currentLiab),         false, false],
+        ['  \u2013 Non-Current Portion',                  consol_disc.map(r => r.nonCurrentLiab),      false, false],
+      ].forEach(([lbl, vals, isTot, isNew], ri) => {
+        const dr = wsDisc.addRow([lbl, ...vals]);
         dr.height = 16;
         dr.eachCell((c, ci) => {
           if (ci > totalMergeCols) return;
-          c.border = discBorder; c.font = isTot ? bFont : nFont;
-          c.fill = isTot ? { type:'pattern', pattern:'solid', fgColor:{argb:'FFDBEAFE'} } : (ri % 2 === 0 ? discEvenFill : discOddFill);
-          c.alignment = ci === 1 ? { horizontal:'left' } : { horizontal:'right' };
+          c.border = discBorder;
+          c.alignment = ci === 1 ? { horizontal: 'left' } : { horizontal: 'right' };
           if (ci > 1) c.numFmt = numFmt;
+          if (isTot) {
+            c.font = bFont;
+            c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDBEAFE' } };
+          } else if (isNew) {
+            // New Leases row — amber highlight
+            c.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FF7B5800' } };
+            c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFF8C4' } };
+          } else {
+            c.font = nFont;
+            c.fill = ri % 2 === 0 ? discEvenFill : discOddFill;
+          }
         });
       });
+
+      // Formula note row
+      const noteRi = wsDisc.rowCount + 1;
+      wsDisc.mergeCells(noteRi, 1, noteRi, totalMergeCols);
+      const noteR2a = wsDisc.addRow(['\u24d8  Formula: Opening + New Leases Recognized + Interest \u2212 Payments = Closing Liability']);
+      noteR2a.height = 20;
+      noteR2a.getCell(1).font = { name: 'Calibri', italic: true, size: 9, color: { argb: 'FF78350F' } };
+      noteR2a.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFDE7' } };
+      noteR2a.getCell(1).alignment = { horizontal: 'left', vertical: 'middle' };
+
       wsDisc.addRow([]);
+
+
 
       // 2b: ROU Asset Movement
       addDiscSubhead(wsDisc, '2(b)  Movement in Right-of-Use Asset (\u20B9)  [Para 29\u201331, 36]', totalMergeCols);
