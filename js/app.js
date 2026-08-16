@@ -248,6 +248,7 @@
   let _reactiveDebounce = null;
   const scheduleRecompute = () => {
     if (!_state) return;
+    if (_reactiveDebounce === 'LOADING') return; // skip during portfolio load
     clearTimeout(_reactiveDebounce);
     _reactiveDebounce = setTimeout(() => {
       try { compute(true); } catch(_) {}
@@ -682,12 +683,49 @@
       workingCopy.pvResult.schedule.forEach(r => { r.date = new Date(r.date); });
     }
 
-    // Set working state and clear any leftover var-payments from previous session
+    // Restore _varPayments from saved amortRows if this lease had escalation
+    // This prevents reactive recompute from wiping out hasVarPayments
+    if (workingCopy.inputs.hasVarPayments && workingCopy.amortRows && workingCopy.amortRows.length) {
+      _varPayments = workingCopy.amortRows.map((r, i) => ({
+        period:  i + 1,
+        date:    Utils.toDateStr ? Utils.toDateStr(r.date) : r.date.toISOString().slice(0,10),
+        payment: r.payment
+      }));
+    } else {
+      _varPayments = null;
+    }
+
+    // Set working state
     _state         = workingCopy;
-    _varPayments   = null;
     _loadedLeaseId = id;
 
+    // Pause reactive recompute during population to prevent it from overwriting state
+    const savedDebounce = _reactiveDebounce;
+    clearTimeout(_reactiveDebounce);
+    _reactiveDebounce = 'LOADING'; // sentinel value
+
     populateInputsFromState(workingCopy.inputs);
+
+    // Restore escalation UI if applicable
+    if (workingCopy.inputs.hasVarPayments && workingCopy.inputs.escalationRate) {
+      const sched = buildEscalationSchedule();
+      if (sched) {
+        renderEscalationTable(sched);
+        document.getElementById('escalationTableWrap').style.display = '';
+        const applyBtn = document.getElementById('applyEscalationBtn');
+        if (applyBtn) {
+          applyBtn.textContent = '✔ Schedule Applied';
+          applyBtn.style.color = 'var(--success)';
+          applyBtn.style.borderColor = 'var(--success)';
+        }
+      }
+    } else {
+      document.getElementById('escalationTableWrap').style.display = 'none';
+    }
+
+    // Resume reactive recompute
+    _reactiveDebounce = null;
+
     renderAll(_state);
     _auditTrail.unshift({ ts: new Date().toLocaleString('en-IN'), summary: `Loaded: ${item.label}` });
     renderPortfolio(); // refresh to show [editing] badge
