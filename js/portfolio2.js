@@ -48,16 +48,16 @@ const Portfolio = (() => {
           if (!leases) throw new Error('Invalid portfolio JSON format.');
           // Re-hydrate dates
           leases.forEach(l => {
-            if ((l.savedState || l.state) && (l.savedState || l.state).inputs) {
-              s_X.inputs.startDate = new Date(s_X.inputs.startDate);
-              s_X.inputs.endDate   = new Date(s_X.inputs.endDate);
+            const _st = l.savedState || l.state;
+            if (_st && _st.inputs) {
+              if (_st.inputs.startDate) _st.inputs.startDate = new Date(_st.inputs.startDate);
+              if (_st.inputs.endDate)   _st.inputs.endDate   = new Date(_st.inputs.endDate);
             }
-            if ((l.savedState || l.state) && (l.savedState || l.state).amortRows) {
-              ((l.savedState || l.state) || {}).amortRows?.forEach(r => { r.date = new Date(r.date); });
+            if (_st && _st.amortRows) {
+              _st.amortRows.forEach(r => { r.date = new Date(r.date); });
             }
-            const _stx = l.savedState || l.state;
-            if (_stx && _stx.pvResult && _stx.pvResult.schedule) {
-              _stx.pvResult.schedule.forEach(r => { r.date = new Date(r.date); });
+            if (_st && _st.pvResult && _st.pvResult.schedule) {
+              _st.pvResult.schedule.forEach(r => { r.date = new Date(r.date); });
             }
           });
           callback(leases);
