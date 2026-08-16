@@ -48,15 +48,16 @@ const Portfolio = (() => {
           if (!leases) throw new Error('Invalid portfolio JSON format.');
           // Re-hydrate dates
           leases.forEach(l => {
-            if (l.state && l.state.inputs) {
-              l.state.inputs.startDate = new Date(l.state.inputs.startDate);
-              l.state.inputs.endDate   = new Date(l.state.inputs.endDate);
+            if ((l.savedState || l.state) && (l.savedState || l.state).inputs) {
+              s_X.inputs.startDate = new Date(s_X.inputs.startDate);
+              s_X.inputs.endDate   = new Date(s_X.inputs.endDate);
             }
-            if (l.state && l.state.amortRows) {
-              l.state.amortRows.forEach(r => { r.date = new Date(r.date); });
+            if ((l.savedState || l.state) && (l.savedState || l.state).amortRows) {
+              ((l.savedState || l.state) || {}).amortRows?.forEach(r => { r.date = new Date(r.date); });
             }
-            if (l.state && l.state.pvResult && l.state.pvResult.schedule) {
-              l.state.pvResult.schedule.forEach(r => { r.date = new Date(r.date); });
+            const _stx = l.savedState || l.state;
+            if (_stx && _stx.pvResult && _stx.pvResult.schedule) {
+              _stx.pvResult.schedule.forEach(r => { r.date = new Date(r.date); });
             }
           });
           callback(leases);
@@ -83,8 +84,8 @@ const Portfolio = (() => {
     const fyMap = {};
 
     portfolio.forEach(l => {
-      const s = l.state;
-      if (!s) return;
+      const s = l.savedState || l.state;
+      if (!s || !s.inputs) return;
       totalPV       += (s.pvResult && s.pvResult.totalPV) ? s.pvResult.totalPV : 0;
       totalROU      += s.inputs.rouInitial      || 0;
       totalInterest += s.inputs.totalInterest   || 0;
@@ -173,20 +174,24 @@ const Portfolio = (() => {
         <td>${Utils.fmtNum(r.nonCurrentLiab)}</td>
         <td>${Utils.fmtNum(r.dep)}</td>
         <td>${Utils.fmtNum(r.rouCloseBV)}</td>
-      </tr>`).join('');
+      </tr>`;
+    }).join('');
 
     // Per-lease breakdown
-    const leaseRows = portfolio.map(l => `
+    const leaseRows = portfolio.map(l => {
+      const s_X = l.savedState || l.state;
+      if (!s_X || !s_X.inputs) return '';
+      return `
       <tr>
         <td style="text-align:left;font-weight:500;">${l.label}</td>
-        <td>${Utils.fmtDate(new Date(l.state.inputs.startDate))}</td>
-        <td>${Utils.fmtDate(new Date(l.state.inputs.endDate))}</td>
-        <td>${l.state.inputs.leaseTerm}m</td>
-        <td>${l.state.inputs.roi}%</td>
-        <td>${Utils.fmtINR((l.state.pvResult && l.state.pvResult.totalPV) || 0)}</td>
-        <td>${Utils.fmtINR(l.state.inputs.rouInitial)}</td>
-        <td>${Utils.fmtINR(l.state.inputs.totalInterest)}</td>
-        <td>${Utils.fmtINR(l.state.inputs.totalPayments)}</td>
+        <td>${Utils.fmtDate(new Date(s_X.inputs.startDate))}</td>
+        <td>${Utils.fmtDate(new Date(s_X.inputs.endDate))}</td>
+        <td>${s_X.inputs.leaseTerm}m</td>
+        <td>${s_X.inputs.roi}%</td>
+        <td>${Utils.fmtINR((s_X.pvResult && s_X.pvResult.totalPV) || 0)}</td>
+        <td>${Utils.fmtINR(s_X.inputs.rouInitial)}</td>
+        <td>${Utils.fmtINR(s_X.inputs.totalInterest)}</td>
+        <td>${Utils.fmtINR(s_X.inputs.totalPayments)}</td>
       </tr>`).join('');
 
     container.innerHTML = `
@@ -345,7 +350,8 @@ const Portfolio = (() => {
     };
 
     portfolio.forEach((l, idx) => {
-      const s = l.state;
+      const s = l.savedState || l.state;
+      if (!s || !s.inputs) return;
       const row = ws1.addRow([
         l.label,
         Utils.fmtDate(new Date(s.inputs.startDate)),
@@ -448,7 +454,7 @@ const Portfolio = (() => {
 
     // Collect all FYs in sorted order across all leases
     const allFYs = [...new Set(
-      portfolio.flatMap(l => (l.state.fyJournals || []).map(f => f.fy))
+      portfolio.flatMap(l => ((l.savedState || l.state)?.fyJournals || []).map(f => f.fy))
     )].sort();
 
     let jeRowIdx = 0;
@@ -464,7 +470,7 @@ const Portfolio = (() => {
       });
 
       portfolio.forEach(l => {
-        const fyJournals = l.state.fyJournals || [];
+        const _ssx = l.savedState || l.state; const fyJournals = (_ssx && _ssx.fyJournals) || [];
         const fyBlock = fyJournals.find(f => f.fy === fy);
         if (!fyBlock) return;
 
@@ -516,7 +522,7 @@ const Portfolio = (() => {
        Portfolio Summary, Consolidated FY Summary, Consolidated Journal Entries, Consolidated JE.
        This avoids hitting Excel's sheet limit with large portfolios (40+ leases). */
     /* Consolidated JE by Entry Type - using fyJournals as single source of truth */
-    const allFYs2 = [...new Set(portfolio.flatMap(l => (l.state.fyJournals||[]).map(f=>f.fy)))].sort();
+    const allFYs2 = [...new Set(portfolio.flatMap(l => ((l.savedState || l.state)?.fyJournals||[]).map(f=>f.fy)))].sort();
     const JE_TYPES2 = ['Initial Recognition','Interest Accrual','Lease Payment','Depreciation of ROU Asset'];
 
     const ledgerCols = [{ width: 16 }, { width: 30 }, { width: 44 }, { width: 18 }, { width: 18 }];
@@ -560,7 +566,7 @@ const Portfolio = (() => {
     allFYs2.forEach(fy => {
       // Skip FY if no lease has any data in it
       const fyHasAny = portfolio.some(l =>
-        (l.state.fyJournals||[]).some(fb =>
+        ((l.savedState || l.state)?.fyJournals||[]).some(fb =>
           fb.fy === fy && fb.entries.some(e => e.lines.reduce((s,ln)=>s+(ln.dr||0),0) > 0)
         )
       );
@@ -583,7 +589,7 @@ const Portfolio = (() => {
       JE_TYPES2.forEach(jeType => {
         // Check if ANY lease has this type with amt > 0 in this FY
         const typeHasData = portfolio.some(l => {
-          const fb = (l.state.fyJournals||[]).find(f => f.fy === fy);
+          const fb = ((l.savedState || l.state)?.fyJournals||[]).find(f => f.fy === fy);
           if (!fb) return false;
           const e = fb.entries.find(en => en.label === jeType);
           if (!e) return false;
@@ -608,7 +614,7 @@ const Portfolio = (() => {
 
         // Collect per-lease amounts
         const perLease = portfolio.map(l => {
-          const fb = (l.state.fyJournals||[]).find(f => f.fy === fy);
+          const fb = ((l.savedState || l.state)?.fyJournals||[]).find(f => f.fy === fy);
           if (!fb) return { amt:0, drAcc:jeType, crAcc:jeType };
           const entry = fb.entries.find(e => e.label === jeType);
           if (!entry) return { amt:0, drAcc:jeType, crAcc:jeType };
