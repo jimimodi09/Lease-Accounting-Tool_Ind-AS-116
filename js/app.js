@@ -567,10 +567,12 @@
       // Totals always read from savedState only — never from _state or live calculations
       let tPV=0, tROU=0, tInt=0, tPmt=0;
       _portfolio.forEach(l => {
-        tPV  += l.savedState.pvResult.totalPV;
-        tROU += l.savedState.inputs.rouInitial;
-        tInt += l.savedState.inputs.totalInterest;
-        tPmt += l.savedState.inputs.totalPayments;
+        const ss = l.savedState;
+        if (!ss) return;
+        tPV  += (ss.pvResult && ss.pvResult.totalPV) ? ss.pvResult.totalPV : 0;
+        tROU += ss.inputs.rouInitial  || 0;
+        tInt += ss.inputs.totalInterest || 0;
+        tPmt += ss.inputs.totalPayments || 0;
       });
 
       listDiv.innerHTML = `<div class="table-wrapper"><table class="data-table"><thead><tr>
@@ -586,7 +588,7 @@
           <td>${Utils.fmtDate(new Date(s.inputs.startDate))}</td>
           <td>${Utils.fmtDate(new Date(s.inputs.endDate))}</td>
           <td>${s.inputs.leaseTerm}m</td><td>${s.inputs.roi}%</td>
-          <td>${Utils.fmtINR(s.pvResult.totalPV)}</td>
+          <td>${Utils.fmtINR((s.pvResult && s.pvResult.totalPV) || 0)}</td>
           <td>${Utils.fmtINR(s.inputs.rouInitial)}</td>
           <td style="text-align:center;">
             <button class="btn-outline" onclick="window._portfolioLoad(${l.id})">Load</button>

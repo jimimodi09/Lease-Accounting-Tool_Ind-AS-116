@@ -97,11 +97,11 @@ const Portfolio = (() => {
     portfolio.forEach(l => {
       const s = l.savedState || l.state;  // support legacy in-memory entries
       if (!s) return;
-      totalPV       += s.pvResult.totalPV;
-      totalROU      += s.inputs.rouInitial;
-      totalInterest += s.inputs.totalInterest;
-      totalPayments += s.inputs.totalPayments;
-      totalDep      += s.inputs.totalDep;
+      totalPV       += (s.pvResult && s.pvResult.totalPV) ? s.pvResult.totalPV : 0;
+      totalROU      += s.inputs.rouInitial      || 0;
+      totalInterest += s.inputs.totalInterest   || 0;
+      totalPayments += s.inputs.totalPayments   || 0;
+      totalDep      += s.inputs.totalDep        || 0;
 
       (s.fySummary || []).forEach(row => {
         if (!fyMap[row.fy]) {
@@ -197,7 +197,7 @@ const Portfolio = (() => {
         <td>${Utils.fmtDate(new Date(s.inputs.endDate))}</td>
         <td>${s.inputs.leaseTerm}m</td>
         <td>${s.inputs.roi}%</td>
-        <td>${Utils.fmtINR(s.pvResult.totalPV)}</td>
+        <td>${Utils.fmtINR((s.pvResult && s.pvResult.totalPV) || 0)}</td>
         <td>${Utils.fmtINR(s.inputs.rouInitial)}</td>
         <td>${Utils.fmtINR(s.inputs.totalInterest)}</td>
         <td>${Utils.fmtINR(s.inputs.totalPayments)}</td>
@@ -365,7 +365,7 @@ const Portfolio = (() => {
         Utils.fmtDate(new Date(s.inputs.endDate)),
         s.inputs.leaseTerm,
         s.inputs.roi,
-        s.pvResult.totalPV,
+        (s.pvResult && s.pvResult.totalPV) || 0,
         s.inputs.rouInitial,
         s.inputs.totalInterest,
         s.inputs.totalPayments,
@@ -727,7 +727,7 @@ const Portfolio = (() => {
         inp.roi + '% p.a.',
         Utils.freqLabel[inp.frequency] || inp.frequency,
         getEscStr(inp),
-        Utils.round2(ss.pvResult.totalPV),
+        Utils.round2((ss.pvResult && ss.pvResult.totalPV) || 0),
         Utils.round2(inp.rouInitial)
       ]);
       r.height = 18;

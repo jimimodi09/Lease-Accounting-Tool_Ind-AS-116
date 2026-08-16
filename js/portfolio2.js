@@ -84,11 +84,12 @@ const Portfolio = (() => {
 
     portfolio.forEach(l => {
       const s = l.state;
-      totalPV       += s.pvResult.totalPV;
-      totalROU      += s.inputs.rouInitial;
-      totalInterest += s.inputs.totalInterest;
-      totalPayments += s.inputs.totalPayments;
-      totalDep      += s.inputs.totalDep;
+      if (!s) return;
+      totalPV       += (s.pvResult && s.pvResult.totalPV) ? s.pvResult.totalPV : 0;
+      totalROU      += s.inputs.rouInitial      || 0;
+      totalInterest += s.inputs.totalInterest   || 0;
+      totalPayments += s.inputs.totalPayments   || 0;
+      totalDep      += s.inputs.totalDep        || 0;
 
       (s.fySummary || []).forEach(row => {
         if (!fyMap[row.fy]) {
@@ -182,7 +183,7 @@ const Portfolio = (() => {
         <td>${Utils.fmtDate(new Date(l.state.inputs.endDate))}</td>
         <td>${l.state.inputs.leaseTerm}m</td>
         <td>${l.state.inputs.roi}%</td>
-        <td>${Utils.fmtINR(l.state.pvResult.totalPV)}</td>
+        <td>${Utils.fmtINR((l.state.pvResult && l.state.pvResult.totalPV) || 0)}</td>
         <td>${Utils.fmtINR(l.state.inputs.rouInitial)}</td>
         <td>${Utils.fmtINR(l.state.inputs.totalInterest)}</td>
         <td>${Utils.fmtINR(l.state.inputs.totalPayments)}</td>
@@ -353,7 +354,7 @@ const Portfolio = (() => {
         s.inputs.roi,
         getEscRate(s.inputs),
         getEscFreq(s.inputs),
-        s.pvResult.totalPV,
+        (s.pvResult && s.pvResult.totalPV) || 0,
         s.inputs.rouInitial,
         s.inputs.totalInterest,
         s.inputs.totalPayments

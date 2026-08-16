@@ -92,6 +92,7 @@ const Export = (() => {
   const toExcel = async (state) => {
     if (typeof ExcelJS === 'undefined') { alert('ExcelJS not loaded.'); return; }
     const { inputs, pvResult, amortRows, rouRows, fySummary, fyJournals, leaseName } = state;
+    if (!pvResult) throw new Error('Lease data is incomplete (pvResult missing). Please re-compute the lease before exporting.');
     const discState = { inputs, pvResult, fySummary, rouInitial: inputs.rouInitial, totalInterest: inputs.totalInterest, totalDep: inputs.totalDep, totalPayments: inputs.totalPayments, amortRows };
     const name = leaseName || 'Lease';
 
@@ -642,6 +643,7 @@ const Export = (() => {
     const jsPDF = window.jspdf ? window.jspdf.jsPDF : jspdf.jsPDF;
     const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
     const { inputs, pvResult, amortRows, rouRows, fySummary, fyJournals, leaseName } = state;
+    if (!pvResult) { alert('Lease data is incomplete (pvResult missing). Please re-compute the lease before exporting.'); return; }
     const PAGE_W = doc.internal.pageSize.getWidth();
     const DARK = [20, 23, 38], ACCENT = [79, 142, 247], WHITE = [232, 234, 240];
 
