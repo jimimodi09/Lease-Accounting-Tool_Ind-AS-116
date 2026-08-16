@@ -192,7 +192,8 @@ const Portfolio = (() => {
         <td>${Utils.fmtINR(s_X.inputs.rouInitial)}</td>
         <td>${Utils.fmtINR(s_X.inputs.totalInterest)}</td>
         <td>${Utils.fmtINR(s_X.inputs.totalPayments)}</td>
-      </tr>`).join('');
+      </tr>`;
+    }).join('');
 
     container.innerHTML = `
       <div class="section-title" style="margin-top:0;">&#x1F4CA; Consolidated Portfolio KPIs</div>
