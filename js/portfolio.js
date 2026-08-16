@@ -58,11 +58,13 @@ const Portfolio = (() => {
               l.savedState = l.state;
               delete l.state;
             }
-            // Re-hydrate dates on savedState (NOT in-place on portfolio — caller deep-clones)
+          // Re-hydrate dates on savedState (NOT in-place on portfolio — caller deep-clones)
             const ss = l.savedState;
-            if (ss && ss.inputs) {
+            if (ss && ss.inputs && ss.inputs.startDate) {
               ss.inputs.startDate = new Date(ss.inputs.startDate);
-              ss.inputs.endDate   = new Date(ss.inputs.endDate);
+            }
+            if (ss && ss.inputs && ss.inputs.endDate) {
+              ss.inputs.endDate = new Date(ss.inputs.endDate);
             }
             if (ss && ss.amortRows) {
               ss.amortRows.forEach(r => { r.date = new Date(r.date); });
@@ -96,7 +98,7 @@ const Portfolio = (() => {
 
     portfolio.forEach(l => {
       const s = l.savedState || l.state;  // support legacy in-memory entries
-      if (!s) return;
+      if (!s || !s.inputs) return;         // guard: skip entries with missing inputs
       totalPV       += (s.pvResult && s.pvResult.totalPV) ? s.pvResult.totalPV : 0;
       totalROU      += s.inputs.rouInitial      || 0;
       totalInterest += s.inputs.totalInterest   || 0;
@@ -190,6 +192,7 @@ const Portfolio = (() => {
     // Per-lease breakdown
     const leaseRows = portfolio.map(l => {
       const s = l.savedState || l.state;
+      if (!s || !s.inputs) return '';
       return `
       <tr>
         <td style="text-align:left;font-weight:500;">${l.label}</td>
@@ -358,7 +361,7 @@ const Portfolio = (() => {
 
     portfolio.forEach((l, idx) => {
       const s = l.savedState || l.state;
-      if (!s) return;
+      if (!s || !s.inputs) return;
       const row = ws1.addRow([
         l.label,
         Utils.fmtDate(new Date(s.inputs.startDate)),
@@ -459,7 +462,10 @@ const Portfolio = (() => {
 
     // Collect all FYs in sorted order across all leases
     const allFYs = [...new Set(
-      portfolio.flatMap(l => (l.state.fyJournals || []).map(f => f.fy))
+      portfolio.flatMap(l => {
+        const ss = l.savedState || l.state;
+        return ss ? (ss.fyJournals || []).map(f => f.fy) : [];
+      })
     )].sort();
 
     let jeRowIdx = 0;
@@ -475,7 +481,8 @@ const Portfolio = (() => {
       });
 
       portfolio.forEach(l => {
-        const fyJournals = (l.savedState || l.state).fyJournals || [];
+        const ss = l.savedState || l.state;
+        const fyJournals = (ss && ss.fyJournals) ? ss.fyJournals : [];
         const fyBlock = fyJournals.find(f => f.fy === fy);
         if (!fyBlock) return;
 
@@ -634,7 +641,10 @@ const Portfolio = (() => {
     dBlank(wsd);
     dSubHdr(wsd, '(b) Movement in Right-of-Use Asset (â‚¹)  [Para 29â€“31, 36]');
     addDataHdr(wsd, 'Particulars', fyHdrs);
-    const totalROUInit = portfolio.reduce((s, l) => s + (l.savedState || l.state).inputs.rouInitial, 0);
+    const totalROUInit = portfolio.reduce((s, l) => {
+      const st = l.savedState || l.state;
+      return s + (st && st.inputs ? (st.inputs.rouInitial || 0) : 0);
+    }, 0);
     [
       ['Opening Book Value',  c.fySummary.map((r, i) => i === 0 ? Utils.round2(totalROUInit) : Utils.round2(c.fySummary[i-1].rouCloseBV)), false],
       ['Less: Depreciation',  c.fySummary.map(r => r.dep),       false],

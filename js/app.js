@@ -568,7 +568,7 @@
       let tPV=0, tROU=0, tInt=0, tPmt=0;
       _portfolio.forEach(l => {
         const ss = l.savedState;
-        if (!ss) return;
+        if (!ss || !ss.inputs) return;
         tPV  += (ss.pvResult && ss.pvResult.totalPV) ? ss.pvResult.totalPV : 0;
         tROU += ss.inputs.rouInitial  || 0;
         tInt += ss.inputs.totalInterest || 0;
@@ -580,6 +580,7 @@
       </tr></thead><tbody>
       ${_portfolio.map(l => {
         const s = l.savedState;
+        if (!s || !s.inputs) return '';   // skip malformed entries
         const isLoaded = l.id === _loadedLeaseId;
         return `<tr${isLoaded ? ' style="background:rgba(99,102,241,.06);outline:2px solid var(--primary);outline-offset:-2px;"' : ''}>
           <td style="font-family:var(--font);font-weight:${isLoaded ? '600' : '400'};">
@@ -690,7 +691,7 @@
     renderAll(_state);
     _auditTrail.unshift({ ts: new Date().toLocaleString('en-IN'), summary: `Loaded: ${item.label}` });
     renderPortfolio(); // refresh to show [editing] badge
-    switchTab('summary');
+    switchTab('inputs');  // jump straight to Inputs so user can review / edit
   };
 
   window._portfolioDelete = (id) => {
