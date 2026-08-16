@@ -372,18 +372,40 @@ const Portfolio = (() => {
     });
 
     c.fySummary.forEach((r, idx) => {
-      const row = ws2.addRow([r.fy, r.openBal, r.interest, r.payments, r.closeBal, r.currentLiab, r.nonCurrentLiab, r.dep, r.rouCloseBV]);
+      // Opening = prior year closing (or 0 for first year)
+      // New Leases during year = current openBal - prior closing
+      const prevClose  = idx === 0 ? 0 : c.fySummary[idx - 1].closeBal;
+      const opening    = Utils.round2(prevClose);
+      const newLeases  = Utils.round2(r.openBal - prevClose);
+
+      // Column order: FY | Opening (prev closing) | New Leases during Year | Interest | Payments | Closing | Current | Non-Current | Dep | ROU BV
+      const row = ws2.addRow([r.fy, opening, newLeases, r.interest, r.payments, r.closeBal, r.currentLiab, r.nonCurrentLiab, r.dep, r.rouCloseBV]);
       row.height = 18;
       const fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: idx % 2 === 0 ? 'FFF5F9FF' : 'FFFFFFFF' } };
       row.eachCell((cell, ci) => {
         cell.fill = fill; cell.font = normFont; cell.border = border;
         cell.alignment = { horizontal: ci === 1 ? 'left' : 'right', vertical: 'middle' };
         if (ci > 1) cell.numFmt = numFmt;
+        // Highlight New Leases column (col 3) in light yellow when non-zero
+        if (ci === 3 && newLeases > 0) {
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFF8C4' } };
+          cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FF7B5800' } };
+        }
       });
     });
 
-    // Grand total row
-    const gt = ws2.addRow(['Grand Total', '', Utils.round2(c.fySummary.reduce((s,r)=>s+r.interest,0)), Utils.round2(c.fySummary.reduce((s,r)=>s+r.payments,0)), '', '', '', Utils.round2(c.fySummary.reduce((s,r)=>s+r.dep,0)), '']);
+    // Grand total row — Opening=first year opening(0), New Leases = sum of all new leases
+    const totalNewLeases = Utils.round2(c.fySummary.reduce((s, r, i) => {
+      const prevClose = i === 0 ? 0 : c.fySummary[i - 1].closeBal;
+      return s + (r.openBal - prevClose);
+    }, 0));
+    const gt = ws2.addRow([
+      'Grand Total', '', totalNewLeases,
+      Utils.round2(c.fySummary.reduce((s,r)=>s+r.interest,0)),
+      Utils.round2(c.fySummary.reduce((s,r)=>s+r.payments,0)),
+      '', '', '',
+      Utils.round2(c.fySummary.reduce((s,r)=>s+r.dep,0)), ''
+    ]);
     gt.height = 20;
     gt.eachCell((cell, ci) => {
       cell.fill = totalFill; cell.font = boldFont; cell.border = border;
@@ -391,7 +413,16 @@ const Portfolio = (() => {
       if (ci > 1) cell.numFmt = numFmt;
     });
 
-    ws2.columns = [{ width: 16 }, { width: 18 }, { width: 18 }, { width: 16 }, { width: 18 }, { width: 16 }, { width: 20 }, { width: 16 }, { width: 18 }];
+    // Note row
+    const noteIdx = ws2.rowCount + 1;
+    ws2.mergeCells(noteIdx, 1, noteIdx, 10);
+    const noteRow2 = ws2.addRow(['Note: Opening = Prior Year Closing Liability. New Leases Recognized = PV of leases commencing during the year. Formula: Opening + New Leases + Interest − Payments = Closing.']);
+    noteRow2.height = 28;
+    noteRow2.getCell(1).font = { name: 'Calibri', italic: true, size: 9, color: { argb: 'FF4A4A4A' } };
+    noteRow2.getCell(1).fill = lightFill;
+    noteRow2.getCell(1).alignment = { wrapText: true, vertical: 'middle', horizontal: 'left' };
+
+    ws2.columns = [{ width: 16 }, { width: 20 }, { width: 24 }, { width: 18 }, { width: 16 }, { width: 20 }, { width: 16 }, { width: 20 }, { width: 16 }, { width: 18 }];
 
     /* â� Rs.â� Rs. SHEET 3: Consolidated Journal Entries â� Rs.â� Rs. */
     const wje = wb.addWorksheet('Consolidated Journal Entries', { views: [{ state: 'frozen', ySplit: 3 }] });
