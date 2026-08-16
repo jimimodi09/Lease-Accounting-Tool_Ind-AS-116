@@ -677,7 +677,9 @@
     workingCopy.inputs.startDate = new Date(workingCopy.inputs.startDate);
     workingCopy.inputs.endDate   = new Date(workingCopy.inputs.endDate);
     workingCopy.amortRows.forEach(r => { r.date = new Date(r.date); });
-    workingCopy.pvResult.schedule.forEach(r => { r.date = new Date(r.date); });
+    if (workingCopy.pvResult && workingCopy.pvResult.schedule) {
+      workingCopy.pvResult.schedule.forEach(r => { r.date = new Date(r.date); });
+    }
 
     // Set working state and clear any leftover var-payments from previous session
     _state         = workingCopy;
