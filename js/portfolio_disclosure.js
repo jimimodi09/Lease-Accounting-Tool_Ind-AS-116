@@ -158,22 +158,59 @@ const PortfolioDisclosure = (() => {
 
     /* 2a – Lease Liability Movement */
     if (consol.length > 0) {
-      html += subHead('2(a) Movement in Lease Liability (\u20B9) &nbsp;[Para 52(a), 53(b)]');
+      html += subHead('2(a) Movement in Lease Liability (₹) &nbsp;[Para 52(a), 53(b)]');
       html += tblOpen(['Particulars', ...fyList]);
-      [
-        ['Opening Lease Liability',      'openBal',      false],
-        ['Add: Interest Accrued (IBR)',  'interest',     false],
-        ['Less: Lease Payments Made',    'payments',     false],
-        ['Closing Lease Liability',      'closeBal',     true ],
-        ['&nbsp;&nbsp;\u2013 Current Portion',     'currentLiab',  false],
-        ['&nbsp;&nbsp;\u2013 Non-Current Portion', 'nonCurrentLiab', false],
-      ].forEach(([label, field, isTot], ri) => {
-        const vals = consol.map(r => Utils.fmtNum(r[field]));
-        html += `<tr class="${isTot ? 'disc-total-row' : ri % 2 === 0 ? 'disc-row-even' : ''}">
-          <td style="text-align:left;${isTot ? 'font-weight:600;' : ''}">${label}</td>
-          ${vals.map(v => `<td${isTot ? ' style="font-weight:600;"' : ''}>${v}</td>`).join('')}
-        </tr>`;
-      });
+
+      // Opening = prior year closing (0 for first FY)
+      html += '<tr class="disc-row-even">' +
+        '<td style="text-align:left;">Opening Lease Liability</td>' +
+        consol.map((r, i) => '<td>' + Utils.fmtNum(i === 0 ? 0 : consol[i - 1].closeBal) + '</td>').join('') +
+        '</tr>';
+
+      // New Leases Recognized during the Year = openBal - prevClose
+      html += '<tr style="background:#fffff8;">' +
+        '<td style="text-align:left;font-weight:600;color:#7b5800;">Add: New Leases Recognized during the Year</td>' +
+        consol.map((r, i) => {
+          const newL = Utils.round2(r.openBal - (i === 0 ? 0 : consol[i - 1].closeBal));
+          return '<td style="font-weight:600;color:#7b5800;background:#fffff8c4;">' + Utils.fmtNum(newL) + '</td>';
+        }).join('') +
+        '</tr>';
+
+      // Interest
+      html += '<tr>' +
+        '<td style="text-align:left;">Add: Interest Accrued (IBR)</td>' +
+        consol.map(r => '<td>' + Utils.fmtNum(r.interest) + '</td>').join('') +
+        '</tr>';
+
+      // Payments
+      html += '<tr class="disc-row-even">' +
+        '<td style="text-align:left;">Less: Lease Payments Made</td>' +
+        consol.map(r => '<td>' + Utils.fmtNum(r.payments) + '</td>').join('') +
+        '</tr>';
+
+      // Closing
+      html += '<tr class="disc-total-row">' +
+        '<td style="text-align:left;font-weight:600;">Closing Lease Liability</td>' +
+        consol.map(r => '<td style="font-weight:600;">' + Utils.fmtNum(r.closeBal) + '</td>').join('') +
+        '</tr>';
+
+      // Current portion
+      html += '<tr>' +
+        '<td style="text-align:left;">&nbsp;&nbsp;– Current Portion</td>' +
+        consol.map(r => '<td>' + Utils.fmtNum(r.currentLiab) + '</td>').join('') +
+        '</tr>';
+
+      // Non-current portion
+      html += '<tr class="disc-row-even">' +
+        '<td style="text-align:left;">&nbsp;&nbsp;– Non-Current Portion</td>' +
+        consol.map(r => '<td>' + Utils.fmtNum(r.nonCurrentLiab) + '</td>').join('') +
+        '</tr>';
+
+      // Formula footnote
+      html += '<tr><td colspan="' + (1 + fyList.length) + '" style="text-align:left;font-size:11px;color:#78350f;background:#fffde7;padding:4px 8px;font-style:italic;">' +
+        '&#9432;&nbsp; Formula: Opening + New Leases Recognized + Interest &minus; Payments = Closing Liability' +
+        '</td></tr>';
+
       html += tblClose('');
 
       /* 2b – ROU Asset Movement */
