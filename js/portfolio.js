@@ -11,12 +11,18 @@ const Portfolio = (() => {
       alert('No leases in portfolio to export. Save at least one lease first.');
       return;
     }
+    // Normalise: export uses 'savedState' key — migrate old 'state' entries on the fly
+    const normalisedLeases = portfolio.map(l => ({
+      id: l.id,
+      label: l.label,
+      savedState: l.savedState || l.state  // handle legacy in-memory entries
+    }));
     const payload = {
       exportedAt: new Date().toISOString(),
       tool: 'Ind AS 116 Lease Accounting Tool',
       author: 'CA Jimi R Modi',
-      version: '1.0',
-      leases: portfolio
+      version: '2.0',
+      leases: normalisedLeases
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
     const url  = URL.createObjectURL(blob);
@@ -46,17 +52,23 @@ const Portfolio = (() => {
                        : Array.isArray(data.leases) ? data.leases
                        : null;
           if (!leases) throw new Error('Invalid portfolio JSON format.');
-          // Re-hydrate dates
+          // Normalise: migrate old format that used 'state' key to 'savedState'
           leases.forEach(l => {
-            if (l.state && l.state.inputs) {
-              l.state.inputs.startDate = new Date(l.state.inputs.startDate);
-              l.state.inputs.endDate   = new Date(l.state.inputs.endDate);
+            if (!l.savedState && l.state) {
+              l.savedState = l.state;
+              delete l.state;
             }
-            if (l.state && l.state.amortRows) {
-              l.state.amortRows.forEach(r => { r.date = new Date(r.date); });
+            // Re-hydrate dates on savedState (NOT in-place on portfolio — caller deep-clones)
+            const ss = l.savedState;
+            if (ss && ss.inputs) {
+              ss.inputs.startDate = new Date(ss.inputs.startDate);
+              ss.inputs.endDate   = new Date(ss.inputs.endDate);
             }
-            if (l.state && l.state.pvResult && l.state.pvResult.schedule) {
-              l.state.pvResult.schedule.forEach(r => { r.date = new Date(r.date); });
+            if (ss && ss.amortRows) {
+              ss.amortRows.forEach(r => { r.date = new Date(r.date); });
+            }
+            if (ss && ss.pvResult && ss.pvResult.schedule) {
+              ss.pvResult.schedule.forEach(r => { r.date = new Date(r.date); });
             }
           });
           callback(leases);
@@ -83,7 +95,8 @@ const Portfolio = (() => {
     const fyMap = {};
 
     portfolio.forEach(l => {
-      const s = l.state;
+      const s = l.savedState || l.state;  // support legacy in-memory entries
+      if (!s) return;
       totalPV       += s.pvResult.totalPV;
       totalROU      += s.inputs.rouInitial;
       totalInterest += s.inputs.totalInterest;
@@ -175,18 +188,21 @@ const Portfolio = (() => {
       </tr>`).join('');
 
     // Per-lease breakdown
-    const leaseRows = portfolio.map(l => `
+    const leaseRows = portfolio.map(l => {
+      const s = l.savedState || l.state;
+      return `
       <tr>
         <td style="text-align:left;font-weight:500;">${l.label}</td>
-        <td>${Utils.fmtDate(new Date(l.state.inputs.startDate))}</td>
-        <td>${Utils.fmtDate(new Date(l.state.inputs.endDate))}</td>
-        <td>${l.state.inputs.leaseTerm}m</td>
-        <td>${l.state.inputs.roi}%</td>
-        <td>${Utils.fmtINR(l.state.pvResult.totalPV)}</td>
-        <td>${Utils.fmtINR(l.state.inputs.rouInitial)}</td>
-        <td>${Utils.fmtINR(l.state.inputs.totalInterest)}</td>
-        <td>${Utils.fmtINR(l.state.inputs.totalPayments)}</td>
-      </tr>`).join('');
+        <td>${Utils.fmtDate(new Date(s.inputs.startDate))}</td>
+        <td>${Utils.fmtDate(new Date(s.inputs.endDate))}</td>
+        <td>${s.inputs.leaseTerm}m</td>
+        <td>${s.inputs.roi}%</td>
+        <td>${Utils.fmtINR(s.pvResult.totalPV)}</td>
+        <td>${Utils.fmtINR(s.inputs.rouInitial)}</td>
+        <td>${Utils.fmtINR(s.inputs.totalInterest)}</td>
+        <td>${Utils.fmtINR(s.inputs.totalPayments)}</td>
+      </tr>`;
+    }).join('');
 
     container.innerHTML = `
       <div class="section-title" style="margin-top:0;">ðŸ“Š Consolidated Portfolio KPIs</div>
@@ -341,7 +357,8 @@ const Portfolio = (() => {
     });
 
     portfolio.forEach((l, idx) => {
-      const s = l.state;
+      const s = l.savedState || l.state;
+      if (!s) return;
       const row = ws1.addRow([
         l.label,
         Utils.fmtDate(new Date(s.inputs.startDate)),
@@ -458,7 +475,7 @@ const Portfolio = (() => {
       });
 
       portfolio.forEach(l => {
-        const fyJournals = l.state.fyJournals || [];
+        const fyJournals = (l.savedState || l.state).fyJournals || [];
         const fyBlock = fyJournals.find(f => f.fy === fy);
         if (!fyBlock) return;
 
@@ -617,7 +634,7 @@ const Portfolio = (() => {
     dBlank(wsd);
     dSubHdr(wsd, '(b) Movement in Right-of-Use Asset (â‚¹)  [Para 29â€“31, 36]');
     addDataHdr(wsd, 'Particulars', fyHdrs);
-    const totalROUInit = portfolio.reduce((s, l) => s + l.state.inputs.rouInitial, 0);
+    const totalROUInit = portfolio.reduce((s, l) => s + (l.savedState || l.state).inputs.rouInitial, 0);
     [
       ['Opening Book Value',  c.fySummary.map((r, i) => i === 0 ? Utils.round2(totalROUInit) : Utils.round2(c.fySummary[i-1].rouCloseBV)), false],
       ['Less: Depreciation',  c.fySummary.map(r => r.dep),       false],
@@ -657,7 +674,7 @@ const Portfolio = (() => {
     ];
     const matToday = new Date();
     portfolio.forEach(l => {
-      (l.state.amortRows || []).forEach(row => {
+      ((l.savedState || l.state).amortRows || []).forEach(row => {
         const mAway = Utils.monthsBetween(matToday, new Date(row.date));
         matBands.forEach(b => { if (mAway >= b.min && mAway < b.max) b.amount += (row.payment || 0); });
       });
@@ -700,7 +717,9 @@ const Portfolio = (() => {
       r.getCell(1).alignment = { horizontal: 'left', vertical: 'middle' };
     }
     portfolio.forEach((l, ai) => {
-      const inp = l.state.inputs;
+      const ss = l.savedState || l.state;
+      if (!ss) return;
+      const inp = ss.inputs;
       const r = wsd.addRow([
         l.label,
         Utils.fmtDate(new Date(inp.startDate)) + ' to ' + Utils.fmtDate(new Date(inp.endDate)),
@@ -708,7 +727,7 @@ const Portfolio = (() => {
         inp.roi + '% p.a.',
         Utils.freqLabel[inp.frequency] || inp.frequency,
         getEscStr(inp),
-        Utils.round2(l.state.pvResult.totalPV),
+        Utils.round2(ss.pvResult.totalPV),
         Utils.round2(inp.rouInitial)
       ]);
       r.height = 18;

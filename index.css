@@ -482,3 +482,105 @@ select option { background: var(--bg-surface); }
 }
 .disclaimer-footer-copy { font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
 .disclaimer-footer-tool { font-size: 12px; color: var(--text-muted); }
+
+/* =========================================
+   PORTFOLIO DISCLOSURE TAB
+   ========================================= */
+
+/* Header */
+.port-disc-header {
+  background: linear-gradient(135deg, #1E3A5F 0%, #2D6A9F 100%);
+  border-radius: var(--radius);
+  padding: 24px 28px;
+  margin-bottom: 20px;
+  color: #fff;
+}
+.port-disc-title {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  margin-bottom: 6px;
+}
+.port-disc-meta {
+  font-size: 12px;
+  opacity: 0.82;
+  line-height: 1.6;
+}
+
+/* KPI grid (reuses .kpi-card but with a disclosure wrapper) */
+.port-disc-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+/* Section headers */
+.disc-section-head {
+  border-radius: var(--radius-sm);
+  padding: 11px 18px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  margin: 28px 0 10px;
+  letter-spacing: -0.1px;
+}
+.disc-sub-head {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent2);
+  border-left: 3px solid var(--accent);
+  padding: 4px 12px;
+  margin: 18px 0 6px;
+  background: var(--accent-glow);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+/* Table row shading */
+.disc-row-even { background: #F0F9FF; }
+.disc-total-row {
+  background: #E0F2FE;
+  font-weight: 600;
+}
+
+/* Per-lease banner inside section 5 */
+.disc-lease-banner {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  background: linear-gradient(90deg, #EFF6FF, transparent);
+  border-left: 4px solid var(--accent);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  padding: 10px 16px;
+  margin: 20px 0 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* Grand total strip */
+.disc-grand-total {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  align-items: center;
+  background: #1E3A5F;
+  color: #fff;
+  border-radius: var(--radius-sm);
+  padding: 14px 22px;
+  margin: 12px 0 28px;
+  font-size: 13px;
+}
+.disc-grand-total strong { color: #7DD3FC; }
+
+/* Disclaimer strip */
+.port-disc-disclaimer {
+  background: #FEF9C3;
+  border: 1px solid #FDE047;
+  border-radius: var(--radius-sm);
+  padding: 14px 18px;
+  font-size: 12px;
+  color: #713F12;
+  line-height: 1.7;
+  margin-top: 28px;
+}

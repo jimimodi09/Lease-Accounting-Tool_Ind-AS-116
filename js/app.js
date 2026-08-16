@@ -4,10 +4,11 @@
 (function () {
 
   /* ─────────────────────────  STATE  ───────────────────────── */
-  let _state       = null;   // computed result for current lease
+  let _state       = null;   // working computed result for the lease currently on-screen
   let _auditTrail  = [];     // [{ts, summary}]
-  let _portfolio   = [];     // saved leases [{id, label, state}]
+  let _portfolio   = [];     // saved leases [{id, label, savedState}]  ← savedState is FROZEN until explicit Save
   let _varPayments = null;   // [{period, date, payment}] – from upload OR escalation
+  let _loadedLeaseId = null; // ID of the portfolio entry currently loaded into the form (null = new lease)
 
   /* ─────────────────────────  TAB NAVIGATION  ───────────────────────── */
   document.querySelectorAll('.nav-tab').forEach(btn => {
@@ -16,7 +17,8 @@
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
       btn.classList.add('active');
       document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
-      if (btn.dataset.tab === 'portfolio') { renderPortfolio(); }
+      if (btn.dataset.tab === 'portfolio')        { renderPortfolio(); }
+      if (btn.dataset.tab === 'port-disclosure')  { PortfolioDisclosure.render(_portfolio); }
     });
   });
 
@@ -31,7 +33,6 @@
   });
 
   /* ─────────────────────────  AUTO LEASE TERM  ───────────────────────── */
-  // syncTermYears defined first because autoTerm calls it
   const syncTermYears = () => {
     const months = parseInt(document.getElementById('leaseTerm').value);
     const el = document.getElementById('leaseTermYears');
@@ -128,20 +129,19 @@
     ['initialDirectCosts','leaseIncentives','restorationCosts','residualValue']
       .forEach(id => { document.getElementById(id).value = '0'; });
     document.getElementById('leaseTermYears').value = '';
-    _state       = null;
-    _varPayments = null;
+    _state         = null;
+    _varPayments   = null;
+    _loadedLeaseId = null;   // no longer editing any saved lease
     clearEscalation();
     hideError();
   });
 
   /* ─────────────────────────  ESCALATION CLAUSE  ───────────────────────── */
-  // Show/hide custom months input
   document.getElementById('escalationFreq').addEventListener('change', () => {
     const isCustom = document.getElementById('escalationFreq').value === 'custom';
     document.getElementById('escalationCustomGroup').style.display = isCustom ? '' : 'none';
   });
 
-  // Build escalated payment schedule from inputs
   function buildEscalationSchedule() {
     const startStr  = document.getElementById('leaseStart').value;
     const endStr    = document.getElementById('leaseEnd').value;
@@ -164,8 +164,8 @@
     const dates = Calculator.generatePaymentDates(sd, frequency, timing, termMonths, ed);
     if (!dates.length) return null;
 
-    const intervalMonths = Utils.freqMonths[frequency];  // months per payment
-    const periodsPerStep = Math.round(freqVal / intervalMonths); // payment periods per step
+    const intervalMonths = Utils.freqMonths[frequency];
+    const periodsPerStep = Math.round(freqVal / intervalMonths);
 
     let current = baseAmt;
     return dates.map((pd, i) => {
@@ -178,7 +178,6 @@
     });
   }
 
-  // Preview escalation table
   document.getElementById('previewEscalationBtn').addEventListener('click', () => {
     const sched = buildEscalationSchedule();
     if (!sched) {
@@ -207,7 +206,6 @@
     }).join('');
   }
 
-  // Apply escalation schedule → set as _varPayments
   document.getElementById('applyEscalationBtn').addEventListener('click', () => {
     const inputs = document.querySelectorAll('.esc-pmt-input');
     if (!inputs.length) { alert('Preview the schedule first.'); return; }
@@ -227,7 +225,6 @@
     document.getElementById('applyEscalationBtn').style.borderColor = 'var(--success)';
   });
 
-  // Clear escalation
   document.getElementById('clearEscalationBtn').addEventListener('click', clearEscalation);
   function clearEscalation() {
     _varPayments = null;
@@ -242,6 +239,7 @@
   document.getElementById('computeBtn').addEventListener('click', compute);
 
   // ── Reactive recompute: re-run whenever an input changes (if already computed) ──
+  // NOTE: reactive recompute ONLY updates the display — it NEVER touches _portfolio savedState
   const REACTIVE_IDS = [
     'leaseName','leaseStart','leaseEnd','leaseTerm',
     'frequency','paymentTiming','roi','paymentAmount','fyStart',
@@ -249,18 +247,17 @@
   ];
   let _reactiveDebounce = null;
   const scheduleRecompute = () => {
-    if (!_state) return;   // only recompute if a prior result exists
+    if (!_state) return;
     clearTimeout(_reactiveDebounce);
     _reactiveDebounce = setTimeout(() => {
       try { compute(true); } catch(_) {}
-    }, 400);  // 400 ms debounce so rapid keystrokes don't spam
+    }, 400);
   };
   REACTIVE_IDS.forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
     const evt = (el.tagName === 'SELECT') ? 'change' : 'input';
     el.addEventListener(evt, scheduleRecompute);
-    // date-pickers fire 'change' via flatpickr
     if (el.classList.contains('date-picker')) {
       el.addEventListener('change', scheduleRecompute);
     }
@@ -350,7 +347,7 @@
     const rouRows   = Calculator.buildROUSchedule({ rouAssetInitial: rouInitial, startDate, endDate: endDateForROU, fyStartMonth });
     const fySummary = Calculator.buildFYSummary({
       amortRows,
-      rouRows, 
+      rouRows,
       fyStartMonth: inputs.fyStartMonth
     });
 
@@ -390,9 +387,10 @@
         escalationFreq: inp.escalationFreq, escalationCustom: inp.escalationCustom
       };
 
+      // _state holds the working result for the CURRENT on-screen lease only
+      // It does NOT automatically update _portfolio savedState
       _state = { inputs, pvResult, amortRows, rouRows, fySummary, fyJournals, leaseName: inp.leaseName };
 
-      // Only add to audit trail and switch tabs if it's a manual compute click
       if (isReactive !== true) {
         _auditTrail.unshift({
           ts: new Date().toLocaleString('en-IN'),
@@ -401,7 +399,7 @@
       }
 
       renderAll(_state);
-      
+
       if (isReactive !== true) {
         switchTab('summary');
       }
@@ -423,7 +421,6 @@
     set('kpiROI',      inputs.roi + '% p.a.');
     set('kpiFreq',     Utils.freqLabel[inputs.frequency] + (inputs.hasVarPayments ? ' (Escalated)' : ''));
 
-    // Escalation KPIs
     if (inputs.hasVarPayments && inputs.escalationRate) {
       const typeStr = inputs.escalationType === 'percent' ? '% p.a.' : ' ₹ (fixed)';
       set('kpiEscRate', inputs.escalationRate + typeStr);
@@ -460,18 +457,58 @@
   });
 
   /* ─────────────────────────  PORTFOLIO  ───────────────────────── */
+
+  /**
+   * SAVE CURRENT LEASE
+   * ─────────────────
+   * Deep-clones _state into portfolio entry's savedState.
+   * Uses _loadedLeaseId for ID-based lookup (prevents name-collision bugs).
+   * ONLY the targeted lease entry is updated — all other leases are untouched.
+   */
   document.getElementById('saveLeaseBtn').addEventListener('click', () => {
     if (!_state) { alert('Compute a lease first.'); return; }
+
     const label = _state.leaseName || ('Lease ' + (_portfolio.length + 1));
-    const idx   = _portfolio.findIndex(l => l.label === label);
-    if (idx >= 0) { _portfolio[idx].state = JSON.parse(JSON.stringify(_state)); }
-    else          { _portfolio.push({ id: Date.now(), label, state: JSON.parse(JSON.stringify(_state)) }); }
+
+    // Deep-clone the current working state — this becomes the frozen savedState
+    const frozenState = JSON.parse(JSON.stringify(_state));
+
+    if (_loadedLeaseId !== null) {
+      // Update the specific lease that was loaded (ID-based — immune to label changes)
+      const idx = _portfolio.findIndex(l => l.id === _loadedLeaseId);
+      if (idx >= 0) {
+        _portfolio[idx].label      = label;       // allow rename
+        _portfolio[idx].savedState = frozenState;
+      } else {
+        // ID no longer found (shouldn't happen), treat as new
+        _loadedLeaseId = Date.now();
+        _portfolio.push({ id: _loadedLeaseId, label, savedState: frozenState });
+      }
+    } else {
+      // New lease — check for label collision as a secondary guard
+      const byLabel = _portfolio.findIndex(l => l.label === label);
+      if (byLabel >= 0) {
+        _portfolio[byLabel].savedState = frozenState;
+        _loadedLeaseId = _portfolio[byLabel].id;
+      } else {
+        _loadedLeaseId = Date.now();
+        _portfolio.push({ id: _loadedLeaseId, label, savedState: frozenState });
+      }
+    }
+
     _auditTrail.unshift({ ts: new Date().toLocaleString('en-IN'), summary: `Saved: ${label}` });
+    renderPortfolio();
+    // Refresh portfolio disclosure if it's currently active
+    const activeTab = document.querySelector('.nav-tab.active');
+    if (activeTab && activeTab.dataset.tab === 'port-disclosure') {
+      PortfolioDisclosure.render(_portfolio);
+    }
     alert(`"${label}" saved to portfolio.`);
   });
 
   document.getElementById('newLeaseBtn').addEventListener('click', () => {
     if (!confirm('Clear inputs for a new lease?')) return;
+    _loadedLeaseId = null;    // detach from any loaded lease
     document.getElementById('resetBtn').click();
     switchTab('inputs');
   });
@@ -490,7 +527,13 @@
     Portfolio.importJSON((importedLeases) => {
       let added = 0, updated = 0;
       importedLeases.forEach(imported => {
-        const idx = _portfolio.findIndex(l => l.label === imported.label);
+        // Support both old format (state) and new format (savedState)
+        if (!imported.savedState && imported.state) {
+          imported.savedState = imported.state;
+          delete imported.state;
+        }
+        if (!imported.savedState) return;  // skip invalid entries
+        const idx = _portfolio.findIndex(l => l.id === imported.id || l.label === imported.label);
         if (idx >= 0) { _portfolio[idx] = imported; updated++; }
         else           { _portfolio.push(imported); added++; }
       });
@@ -521,33 +564,53 @@
       listDiv.innerHTML = '<p style="color:var(--text-muted);padding:16px 0;">No leases saved. Compute and click Save Current Lease.</p>';
       kpiDiv.innerHTML  = '';
     } else {
-      let tPV=0,tROU=0,tInt=0,tPmt=0;
-      _portfolio.forEach(l => { tPV+=l.state.pvResult.totalPV; tROU+=l.state.inputs.rouInitial; tInt+=l.state.inputs.totalInterest; tPmt+=l.state.inputs.totalPayments; });
+      // Totals always read from savedState only — never from _state or live calculations
+      let tPV=0, tROU=0, tInt=0, tPmt=0;
+      _portfolio.forEach(l => {
+        tPV  += l.savedState.pvResult.totalPV;
+        tROU += l.savedState.inputs.rouInitial;
+        tInt += l.savedState.inputs.totalInterest;
+        tPmt += l.savedState.inputs.totalPayments;
+      });
+
       listDiv.innerHTML = `<div class="table-wrapper"><table class="data-table"><thead><tr>
         <th style="text-align:left;">Lease</th><th>Start</th><th>End</th><th>Term</th><th>IBR</th><th>Liability (PV)</th><th>ROU Asset</th><th>Actions</th>
       </tr></thead><tbody>
-      ${_portfolio.map(l=>`<tr>
-        <td style="font-family:var(--font);">${l.label}</td>
-        <td>${Utils.fmtDate(new Date(l.state.inputs.startDate))}</td>
-        <td>${Utils.fmtDate(new Date(l.state.inputs.endDate))}</td>
-        <td>${l.state.inputs.leaseTerm}m</td><td>${l.state.inputs.roi}%</td>
-        <td>${Utils.fmtINR(l.state.pvResult.totalPV)}</td>
-        <td>${Utils.fmtINR(l.state.inputs.rouInitial)}</td>
-        <td style="text-align:center;">
-          <button class="btn-outline" onclick="window._portfolioLoad(${l.id})">Load</button>
-          <button class="btn-outline" style="color:var(--danger);border-color:var(--danger);margin-left:4px;" onclick="window._portfolioDelete(${l.id})">✕</button>
-        </td></tr>`).join('')}
+      ${_portfolio.map(l => {
+        const s = l.savedState;
+        const isLoaded = l.id === _loadedLeaseId;
+        return `<tr${isLoaded ? ' style="background:rgba(99,102,241,.06);outline:2px solid var(--primary);outline-offset:-2px;"' : ''}>
+          <td style="font-family:var(--font);font-weight:${isLoaded ? '600' : '400'};">
+            ${l.label}${isLoaded ? ' <span style="font-size:10px;color:var(--primary);font-weight:500;">[editing]</span>' : ''}
+          </td>
+          <td>${Utils.fmtDate(new Date(s.inputs.startDate))}</td>
+          <td>${Utils.fmtDate(new Date(s.inputs.endDate))}</td>
+          <td>${s.inputs.leaseTerm}m</td><td>${s.inputs.roi}%</td>
+          <td>${Utils.fmtINR(s.pvResult.totalPV)}</td>
+          <td>${Utils.fmtINR(s.inputs.rouInitial)}</td>
+          <td style="text-align:center;">
+            <button class="btn-outline" onclick="window._portfolioLoad(${l.id})">Load</button>
+            <button class="btn-outline" style="color:var(--danger);border-color:var(--danger);margin-left:4px;" onclick="window._portfolioDelete(${l.id})">✕</button>
+          </td></tr>`;
+      }).join('')}
       </tbody><tfoot><tr><td colspan="5">Portfolio Total</td>
         <td>${Utils.fmtINR(Utils.round2(tPV))}</td><td>${Utils.fmtINR(Utils.round2(tROU))}</td><td></td>
       </tr></tfoot></table></div>`;
-      kpiDiv.innerHTML = [['Total Leases',_portfolio.length],['Portfolio Liability',Utils.fmtINR(Utils.round2(tPV))],['Portfolio ROU',Utils.fmtINR(Utils.round2(tROU))],['Total Interest',Utils.fmtINR(Utils.round2(tInt))],['Total Payments',Utils.fmtINR(Utils.round2(tPmt))]]
-        .map(([l,v])=>`<div class="kpi-card"><div class="kpi-label">${l}</div><div class="kpi-value">${v}</div></div>`).join('');
+
+      kpiDiv.innerHTML = [
+        ['Total Leases',         _portfolio.length],
+        ['Portfolio Liability',  Utils.fmtINR(Utils.round2(tPV))],
+        ['Portfolio ROU',        Utils.fmtINR(Utils.round2(tROU))],
+        ['Total Interest',       Utils.fmtINR(Utils.round2(tInt))],
+        ['Total Payments',       Utils.fmtINR(Utils.round2(tPmt))]
+      ].map(([l,v]) => `<div class="kpi-card"><div class="kpi-label">${l}</div><div class="kpi-value">${v}</div></div>`).join('');
     }
+
     auditBody.innerHTML = _auditTrail.length
-      ? _auditTrail.map(e=>`<tr><td style="font-family:var(--mono);font-size:11px;white-space:nowrap;text-align:left;">${e.ts}</td><td style="text-align:left;">${e.summary}</td></tr>`).join('')
+      ? _auditTrail.map(e => `<tr><td style="font-family:var(--mono);font-size:11px;white-space:nowrap;text-align:left;">${e.ts}</td><td style="text-align:left;">${e.summary}</td></tr>`).join('')
       : '<tr><td colspan="2" style="color:var(--text-muted);">No actions recorded.</td></tr>';
 
-    // Render consolidated view
+    // Consolidated view in portfolio tab
     Portfolio.renderConsolidatedView(_portfolio);
   }
 
@@ -562,7 +625,6 @@
       else el.value = str;
     };
 
-    // Core inputs
     setField('leaseName',          inp.leaseName || '');
     setField('paymentAmount',      inp.paymentAmount != null ? inp.paymentAmount : '');
     setField('roi',                inp.roi         != null ? inp.roi           : '');
@@ -572,16 +634,13 @@
     setField('restorationCosts',   inp.restorationCosts  != null ? inp.restorationCosts  : 0);
     setField('residualValue',      inp.residualValue     != null ? inp.residualValue     : 0);
 
-    // Select inputs
     setSelect('frequency',     inp.frequency);
     setSelect('paymentTiming', inp.paymentTiming);
     setSelect('fyStart',       inp.fyStartMonth);
 
-    // Date pickers (flatpickr-aware)
     setDate('leaseStart', inp.leaseStart);
     setDate('leaseEnd',   inp.leaseEnd);
 
-    // Escalation fields
     const custGrp = document.getElementById('escalationCustomGroup');
     if (inp.hasVarPayments && inp.escalationRate) {
       setField('escalationRate', inp.escalationRate);
@@ -598,21 +657,35 @@
     syncTermYears();
   }
 
+  /**
+   * LOAD LEASE FROM PORTFOLIO
+   * ──────────────────────────
+   * Deep-clones savedState so the portfolio entry is NEVER mutated.
+   * The working copy is used for renderAll() and the form.
+   * _loadedLeaseId is set so that the next Save targets this exact entry.
+   */
   window._portfolioLoad = (id) => {
     const item = _portfolio.find(l => l.id === id);
     if (!item) return;
-    const s = item.state;
-    s.inputs.startDate = new Date(s.inputs.startDate);
-    s.inputs.endDate   = new Date(s.inputs.endDate);
-    s.amortRows.forEach(r => r.date = new Date(r.date));
-    s.pvResult.schedule.forEach(r => r.date = new Date(r.date));
-    _state = s;
 
-    // Populate Inputs tab with the loaded lease data
-    populateInputsFromState(s.inputs);
+    // Deep-clone savedState — NEVER mutate the portfolio entry directly
+    const workingCopy = JSON.parse(JSON.stringify(item.savedState));
 
+    // Re-hydrate Date objects on the working copy only
+    workingCopy.inputs.startDate = new Date(workingCopy.inputs.startDate);
+    workingCopy.inputs.endDate   = new Date(workingCopy.inputs.endDate);
+    workingCopy.amortRows.forEach(r => { r.date = new Date(r.date); });
+    workingCopy.pvResult.schedule.forEach(r => { r.date = new Date(r.date); });
+
+    // Set working state and clear any leftover var-payments from previous session
+    _state         = workingCopy;
+    _varPayments   = null;
+    _loadedLeaseId = id;
+
+    populateInputsFromState(workingCopy.inputs);
     renderAll(_state);
     _auditTrail.unshift({ ts: new Date().toLocaleString('en-IN'), summary: `Loaded: ${item.label}` });
+    renderPortfolio(); // refresh to show [editing] badge
     switchTab('summary');
   };
 
@@ -620,8 +693,16 @@
     const item = _portfolio.find(l => l.id === id);
     if (!item || !confirm(`Remove "${item.label}"?`)) return;
     _portfolio = _portfolio.filter(l => l.id !== id);
+    if (_loadedLeaseId === id) {
+      _loadedLeaseId = null;  // the loaded lease was deleted — detach
+    }
     _auditTrail.unshift({ ts: new Date().toLocaleString('en-IN'), summary: `Removed: ${item.label}` });
     renderPortfolio();
+    // Refresh disclosure if open
+    const activeTab = document.querySelector('.nav-tab.active');
+    if (activeTab && activeTab.dataset.tab === 'port-disclosure') {
+      PortfolioDisclosure.render(_portfolio);
+    }
   };
 
   /* ─────────────────────────  HELPERS  ───────────────────────── */

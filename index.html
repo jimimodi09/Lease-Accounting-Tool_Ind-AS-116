@@ -41,6 +41,7 @@
       <button class="nav-tab" data-tab="compliance">Compliance</button>
       <button class="nav-tab" data-tab="disclaimer">Disclaimer</button>
       <button class="nav-tab" data-tab="portfolio">Portfolio</button>
+      <button class="nav-tab" data-tab="port-disclosure">📋 Portfolio Disclosure</button>
     </nav>
     <div class="nav-actions">
       <button class="btn-icon" id="exportExcelBtn" title="Export to Excel">📊 Excel</button>
@@ -608,6 +609,17 @@
       </div>
     </section>
 
+    <!-- ══════════════════════════════════════ -->
+    <!-- TAB 10: PORTFOLIO DISCLOSURE           -->
+    <!-- ══════════════════════════════════════ -->
+    <section class="tab-panel" id="tab-port-disclosure">
+      <div class="panel-header">
+        <h2>Ind AS 116 – Portfolio Disclosure</h2>
+        <p>Consolidated Ind AS 116 Notes to Accounts generated from the saved data of all portfolio leases. Updating a single lease updates only that lease's contribution; all other contributions remain unchanged.</p>
+      </div>
+      <div id="portDisclosureContainer"></div>
+    </section>
+
   </main>
 
   <!-- Tooltip popup -->
@@ -623,7 +635,8 @@
   <script src="js/upload.js?v=4"></script>
   <script src="js/export.js?v=5"></script>
   <script src="js/portfolio2.js"></script>
-  <script src="js/app.js?v=4"></script>
+  <script src="js/portfolio_disclosure.js"></script>
+  <script src="js/app.js?v=5"></script>
   <script>
     // Initialise all flatpickr date pickers with DD-MM-YYYY format
     document.querySelectorAll('.date-picker').forEach(function(el) {
